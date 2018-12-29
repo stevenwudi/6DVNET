@@ -9,6 +9,7 @@ from maskrcnn_benchmark.utils.env import setup_environment  # noqa F401 isort:sk
 
 import argparse
 import os
+os.environ['CUDA_VISIBLE_DEVICES'] = '3'
 
 import torch
 from maskrcnn_benchmark.config import cfg
@@ -21,7 +22,6 @@ from maskrcnn_benchmark.modeling.detector import build_detection_model
 from maskrcnn_benchmark.utils.checkpoint import DetectronCheckpointer
 from maskrcnn_benchmark.utils.collect_env import collect_env_info
 from maskrcnn_benchmark.utils.comm import synchronize, get_rank
-from maskrcnn_benchmark.utils.imports import import_file
 from maskrcnn_benchmark.utils.logger import setup_logger
 from maskrcnn_benchmark.utils.miscellaneous import mkdir, get_run_name, get_output_dir
 
@@ -72,8 +72,7 @@ def train(cfg, local_rank, distributed, use_tensorboard=False):
             broadcast_buffers=False,
         )
 
-    arguments = {}
-    arguments["iteration"] = 0
+    arguments = {"iteration": 0}
 
     output_dir = cfg.OUTPUT_DIR
 
@@ -92,7 +91,7 @@ def train(cfg, local_rank, distributed, use_tensorboard=False):
     )
 
     checkpoint_period = cfg.SOLVER.CHECKPOINT_PERIOD
-    tensorboard_logdir = cfg.TENSORBOARD_LOGDIR
+    tensorboard_logdir = cfg.OUTPUT_DIR
     tensorboard_exp_name = cfg.TENSORBOARD_EXP_NAME
 
     do_train(
@@ -162,8 +161,6 @@ def main():
     output_dir = get_output_dir(args, args.run_name, args.output_dir)
     args.cfg_filename = os.path.basename(args.config_file)
     cfg.OUTPUT_DIR = output_dir
-    cfg.freeze()
-
     cfg.freeze()
 
     output_dir = cfg.OUTPUT_DIR

@@ -14,8 +14,9 @@ def mkdir(path):
 
 
 def get_run_name():
-    """ A unique name for each run """
-    return datetime.now().strftime('%b%d-%H-%M-%S') + '_' + socket.gethostname()
+    """ A unique name for each run, specific to minute"""
+    # return datetime.now().strftime('%b%d-%H-%M-%S') + '_' + socket.gethostname()
+    return datetime.now().strftime('%b%d-%H-%M') + '_' + socket.gethostname()
 
 
 def get_output_dir(args, run_name, output_dir):
