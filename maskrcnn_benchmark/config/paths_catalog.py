@@ -7,6 +7,20 @@ import os
 class DatasetCatalog(object):
     DATA_DIR = "datasets"
     DATASETS = {
+        "kitti_train": {
+            "root": "/media/SSD_1TB/Kitti/object/training",
+            "img_dir": "/media/SSD_1TB/Kitti/object/training/image_2",
+            "ann_file": "/media/SSD_1TB/Kitti/object/training/label_2"
+        },
+        "kitti_val": {
+            "root": "/media/SSD_1TB/Kitti/object/training",
+            "img_dir": "/media/SSD_1TB/Kitti/object/training/image_2",
+            "ann_file": "/media/SSD_1TB/Kitti/object/training/label_2"
+        },
+        "kitti_test": {
+            "img_dir": "/media/SSD_1TB/Kitti/object/testing/image_2",
+        },
+
         "coco_2017_train": {
             "img_dir": "/media/HDD_4TB/MSCOCO/images/train2017",
             "ann_file": "/media/HDD_4TB/MSCOCO/annotations/instances_train2017.json"
@@ -115,6 +129,19 @@ class DatasetCatalog(object):
                 factory="PascalVOCDataset",
                 args=args,
             )
+        elif "kitti" in name:
+            data_dir = DatasetCatalog.DATA_DIR
+            attrs = DatasetCatalog.DATASETS[name]
+            args = dict(
+                root=os.path.join(data_dir, attrs['root']),
+                img_dir=os.path.join(data_dir, attrs['img_dir']),
+                ann_file=os.path.join(data_dir, attrs['ann_file']),
+            )
+            return dict(
+                factory='KittiDataset',
+                args=args,
+            )
+
         raise RuntimeError("Dataset not available: {}".format(name))
 
 
