@@ -2,6 +2,6 @@
 from .coco import COCODataset
 from .voc import PascalVOCDataset
 from .concat_dataset import ConcatDataset
-from .kitti_instance import KittiDataset
+from .kitti import KittiInstanceDataset
 
 __all__ = ["COCODataset", "ConcatDataset", "PascalVOCDataset", "KittiDataset"]

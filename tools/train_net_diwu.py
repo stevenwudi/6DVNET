@@ -9,7 +9,9 @@ from maskrcnn_benchmark.utils.env import setup_environment  # noqa F401 isort:sk
 
 import argparse
 import os
-os.environ['CUDA_VISIBLE_DEVICES'] = '3'
+# import matplotlib
+# matplotlib.use("TkAgg")
+# os.environ['CUDA_VISIBLE_DEVICES'] = '3'
 
 import torch
 from maskrcnn_benchmark.config import cfg
@@ -79,7 +81,6 @@ def train(cfg, local_rank, distributed, use_tensorboard=False):
             # this should be removed if we update BatchNorm stats
             broadcast_buffers=False,
         )
-
 
     output_dir = cfg.OUTPUT_DIR
 

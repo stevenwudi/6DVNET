@@ -30,6 +30,9 @@ if __name__ == '__main__':
         "trailer"    : [] ,
     }
 
+    instanceCounts = instanceSizes.copy()
+    category_id_to_contiguous_id = {v: i + 1 for i, v in enumerate(sorted(instanceSizes.keys()))}
+
     #for split in ['training', 'testing']:
     for split in ['training']:
         instance_dir = join('/media/SSD_1TB/Kitti/data_semantics', split, 'instance/')
@@ -45,12 +48,17 @@ if __name__ == '__main__':
                     mask = instance_img == instclassid 
                     instance_size = np.count_nonzero(mask)*1.0
                     instanceSizes[id2label[classid].name].append(instance_size)
+                    instanceSizes[id2label[classid].name].append(1)
 
     print("Average instance sizes : ")
     for className in instanceSizes.keys():
         meanInstanceSize = np.nanmean(instanceSizes[className], dtype=np.float32)
         print('\"%s\"\t: %f,' % (className, meanInstanceSize))
 
+    print("Average instance counts : ")
+    for className in instanceSizes.keys():
+        meanInstanceSize = len(instanceSizes[className])
+        print('\"%s\"\t: %d,' % (className, meanInstanceSize))
     """
     Average instance sizes : 
     "bicycle"	: 912.851074,
@@ -63,6 +71,18 @@ if __name__ == '__main__':
     "person"	: 872.750000,
     "truck"	    : 2062.683105,
     "trailer"	: 17606.199219,
+    
+    Average instance counts : 
+    "bicycle"	: 94,
+    "caravan"	: 14,
+    "motorcycle": 16,
+    "rider"	    : 58,
+    "bus"	    : 38,
+    "train"	    : 36,
+    "car"	    : 3356,
+    "person"	: 200,
+    "truck"	    : 202,
+    "trailer"	: 10,
     """
 
 
