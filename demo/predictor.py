@@ -356,3 +356,18 @@ class COCODemo(object):
             )
 
         return image
+
+
+class KITTIDemo(COCODemo):
+    # Kitti instance categories for pretty print
+    CATEGORIES = {'bicycle': 1,
+                'bus': 2,
+                'car': 3,
+                'caravan': 4,
+                'motorcycle': 5,
+                'person': 6,
+                'rider': 7,
+                'trailer': 8,
+                'train': 9,
+                'truck': 10}
+

@@ -11,7 +11,7 @@ import argparse
 import os
 # import matplotlib
 # matplotlib.use("TkAgg")
-# os.environ['CUDA_VISIBLE_DEVICES'] = '3'
+os.environ['CUDA_VISIBLE_DEVICES'] = '3'
 
 import torch
 from maskrcnn_benchmark.config import cfg
@@ -43,8 +43,7 @@ def parse_args():
     parser.add_argument('--disp_interval', help='Display training info every N iterations', default=20, type=int)
     parser.add_argument('--no_cuda', dest='cuda', help='Do not use CUDA device', action='store_false')
 
-    parser.add_argument('--dataset_dir', default='/media/SSD_1TB/ApolloScape/ECCV2018_apollo/train')
-    parser.add_argument('--output_dir', default='/media/HDD_4TB/MSCOCO/experiments')
+    parser.add_argument('--output_dir', default='/media/SSD_1TB/Kitti/experiments')
 
     # Epoch
     parser.add_argument('--start_step', help='Starting step count for training epoch. 0-indexed.', default=0, type=int)
@@ -92,6 +91,7 @@ def train(cfg, local_rank, distributed, use_tensorboard=False):
     checkpoint_period = cfg.SOLVER.CHECKPOINT_PERIOD
     tensorboard_logdir = cfg.OUTPUT_DIR
     tensorboard_exp_name = cfg.TENSORBOARD_EXP_NAME
+    snapshot = cfg.SOLVER.SNAPSHOT_ITERS
 
     do_train(
         model,
@@ -102,6 +102,7 @@ def train(cfg, local_rank, distributed, use_tensorboard=False):
         device,
         checkpoint_period,
         arguments,
+        snapshot,
         tensorboard_logdir,
         tensorboard_exp_name,
         use_tensorboard=use_tensorboard

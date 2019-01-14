@@ -23,7 +23,7 @@ def load(url):
 
 def imshow(img):
     plt.imshow(img[:, :, [2, 1, 0]])
-    plt.axis("off")d
+    plt.axis("off")
 
 config_file = "../configs/caffe2/e2e_mask_rcnn_R_50_FPN_1x_caffe2.yaml"
 

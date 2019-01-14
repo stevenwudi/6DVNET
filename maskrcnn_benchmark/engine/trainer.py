@@ -45,6 +45,7 @@ def do_train(
     device,
     checkpoint_period,
     arguments,
+    snapshot,
     tb_log_dir,
     tb_exp_name,
     use_tensorboard=False
@@ -91,22 +92,22 @@ def do_train(
         eta_seconds = meters.time.global_avg * (max_iter - iteration)
         eta_string = str(datetime.timedelta(seconds=int(eta_seconds)))
 
-        if iteration % 20 == 0 or iteration == max_iter:
+        if iteration % snapshot == 0 or iteration == max_iter:
             logger.info(
                 meters.delimiter.join(
                     [
-                        "eta: {eta}",
+                        "\n \t eta: {eta}",
                         "iter: {iter}",
-                        "{meters}",
                         "lr: {lr:.6f}",
                         "max mem: {memory:.0f}",
+                        "\n \t {meters}",
                     ]
                 ).format(
                     eta=eta_string,
                     iter=iteration,
-                    meters=str(meters),
                     lr=optimizer.param_groups[0]["lr"],
                     memory=torch.cuda.max_memory_allocated() / 1024.0 / 1024.0,
+                    meters=str(meters),
                 )
             )
         if iteration % checkpoint_period == 0:
@@ -116,8 +117,4 @@ def do_train(
 
     total_training_time = time.time() - start_training_time
     total_time_str = str(datetime.timedelta(seconds=total_training_time))
-    logger.info(
-        "Total training time: {} ({:.4f} s / it)".format(
-            total_time_str, total_training_time / (max_iter)
-        )
-    )
+    logger.info("Total training time: {} ({:.4f} s / it)".format(total_time_str, total_training_time / (max_iter)))

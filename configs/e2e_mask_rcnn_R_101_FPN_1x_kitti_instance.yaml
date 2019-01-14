@@ -1,6 +1,7 @@
 MODEL:
   META_ARCHITECTURE: "GeneralizedRCNN"
-  WEIGHT: "catalog://ImageNetPretrained/MSRA/R-101"
+  WEIGHT: "/media/SSD_1TB/Kitti/experiments/e2e_mask_rcnn_R_101_FPN_1x_kitti_instance/Jan10-23-02_n606_step/model_0002500.pth"
+  #WEIGHT: "catalog://ImageNetPretrained/MSRA/R-101"
   BACKBONE:
     CONV_BODY: "R-101-FPN"
     OUT_CHANNELS: 256
@@ -39,10 +40,11 @@ INPUT:
 
 DATALOADER:
   SIZE_DIVISIBILITY: 32
-SOLVER:
 
+SOLVER:
   WEIGHT_DECAY: 0.0001
-  STEPS: (60000, 80000)
-  MAX_ITER: 90000
-  IMS_PER_BATCH: 24 #8
-  BASE_LR:  0.0025  # 0.02
+  STEPS: (5000, 8000)
+  MAX_ITER: 10000
+  IMS_PER_BATCH: 4 #8
+  BASE_LR:  0.005  # 0.02
+  CHECKPOINT_PERIOD : 200
