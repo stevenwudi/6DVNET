@@ -1,5 +1,5 @@
 from maskrcnn_benchmark.config import cfg
-from predictor import COCODemo
+from predictor import KittiDemo
 import matplotlib.pyplot as plt
 from PIL import Image
 import numpy as np
@@ -18,7 +18,7 @@ cfg.merge_from_file(config_file)
 cfg.merge_from_list(["MODEL.DEVICE", "cpu"])
 cfg.merge_from_list(["MODEL.WEIGHT", "/media/SSD_1TB/Kitti/experiments/e2e_mask_rcnn_R_101_FPN_1x_kitti_instance/Jan10-23-02_n606_step/model_0002500.pth"])
 
-coco_demo = COCODemo(
+coco_demo = KittiDemo(
     cfg,
     min_image_size=800,
     confidence_threshold=0.7,

@@ -1,5 +1,6 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved.
 import cv2
+import numpy as np
 import torch
 from torchvision import transforms as T
 
@@ -8,6 +9,7 @@ from maskrcnn_benchmark.utils.checkpoint import DetectronCheckpointer
 from maskrcnn_benchmark.structures.image_list import to_image_list
 from maskrcnn_benchmark.modeling.roi_heads.mask_head.inference import Masker
 from maskrcnn_benchmark import layers as L
+from maskrcnn_benchmark.utils.colormaps import colormap
 
 
 class COCODemo(object):
@@ -357,5 +359,41 @@ class COCODemo(object):
 
         return image
 
+
+class KittiDemo(COCODemo):
+
+    def overlay_mask(self, image, predictions):
+        """
+        Adds the instances contours for each predicted object.
+        Each label has a different color.
+
+        Arguments:
+            image (np.ndarray): an image as returned by OpenCV
+            predictions (BoxList): the result of the computation by the model.
+                It should contain the field `mask` and `labels`.
+        """
+        masks = predictions.get_field("mask").numpy()
+        labels = predictions.get_field("labels")
+
+        colors = self.compute_colors_for_labels(labels).tolist()
+
+        color_list = colormap(rgb=True) / 255
+
+        mask_color_id = 0
+        masks_coloured = np.zeros((masks.shape[2], masks.shape[3], 3))
+
+        for mask, color in zip(masks, colors):
+            thresh = mask[0, :, :, None]
+            _, contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+
+            color_mask = color_list[mask_color_id % len(color_list), 0:3]
+            mask_color_id += 1
+            #mask_coloured = np.zeros((masks.shape[2], masks.shape[3], 3))
+            mask_coloured = thresh*color_mask*255
+            masks_coloured += mask_coloured
+
+        composite = cv2.addWeighted(image, 1.0, masks_coloured.astype(np.uint8), 0.5, 0)
+
+        return composite
 
 
