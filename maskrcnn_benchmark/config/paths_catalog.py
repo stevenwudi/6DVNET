@@ -8,7 +8,6 @@ class DatasetCatalog(object):
     DATA_DIR = "datasets"
     DATASETS = {
         "kitti_instance_train": {
-            "root": "/media/SSD_1TB/Kitti/data_semantics/training",
             "img_dir": "/media/SSD_1TB/Kitti/data_semantics/training/image_2",
             "ann_file": "/media/SSD_1TB/Kitti/data_semantics/training/instance"
         },
@@ -139,14 +138,21 @@ class DatasetCatalog(object):
                 factory="PascalVOCDataset",
                 args=args,
             )
-        elif "kitti_instance" in name:
+        elif "kitti_instance_train" in name:
             data_dir = DatasetCatalog.DATA_DIR
             attrs = DatasetCatalog.DATASETS[name]
             args = dict(
-                root=os.path.join(data_dir, attrs['root']),
                 img_dir=os.path.join(data_dir, attrs['img_dir']),
                 ann_file=os.path.join(data_dir, attrs['ann_file']),
             )
+            return dict(
+                factory='KittiInstanceDataset',
+                args=args,
+            )
+        elif "kitti_instance_test" in name:
+            data_dir = DatasetCatalog.DATA_DIR
+            attrs = DatasetCatalog.DATASETS[name]
+            args = dict(img_dir=os.path.join(data_dir, attrs['img_dir']),)
             return dict(
                 factory='KittiInstanceDataset',
                 args=args,

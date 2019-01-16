@@ -18,11 +18,11 @@ class KittiInstanceDataset(torch.utils.data.Dataset):
 
     """
 
-    def __init__(self, root, ann_file, img_dir, transforms=None):
-        self.root = root
+    def __init__(self, img_dir, ann_file=None, transforms=None):
         self.img_dir = img_dir
         self.ann_file = ann_file
         self.transforms = transforms
+        self.image_shape = (1245, 375)
 
         self.img_files = os.listdir(self.img_dir)
         self.anno_files = os.listdir(self.ann_file)
@@ -45,10 +45,13 @@ class KittiInstanceDataset(torch.utils.data.Dataset):
 
         img = Image.open(os.path.join(self.img_dir, self.img_files[idx])).convert("RGB")
         image_shape = img.size
-        lable_img = Image.open(os.path.join(self.ann_file, self.anno_files[idx]))
-        lable_img = np.array(lable_img)
 
-        target = self.target_png_to_boxlist(lable_img, image_shape)
+        if self.ann_file:
+            lable_img = Image.open(os.path.join(self.ann_file, self.anno_files[idx]))
+            lable_img = np.array(lable_img)
+            target = self.target_png_to_boxlist(lable_img, image_shape)
+        else:
+            target = img
 
         if self.transforms is not None:
             img, target = self.transforms(img, target)
@@ -56,11 +59,18 @@ class KittiInstanceDataset(torch.utils.data.Dataset):
         return img, target, idx
 
     def __len__(self):
-        return len(self.anno_files)
+        return len(self.img_files)
 
     def get_img_info(self, index=None):
         # Di Wu temporally assume the fixed image size. It will be further examined.
         return {"height": 375, "width": 1242}
+
+    def get_groundtruth(self, image_id):
+        lable_img = Image.open(os.path.join(self.ann_file, self.img_files[image_id]))
+        image_shape = lable_img.size
+        lable_img = np.array(lable_img)
+        target = self.target_png_to_boxlist(lable_img, image_shape)
+        return target
 
     def target_png_to_boxlist(self, l_img, image_shape):
         # initiate the lists

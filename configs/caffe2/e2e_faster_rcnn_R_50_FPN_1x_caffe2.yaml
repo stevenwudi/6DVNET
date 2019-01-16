@@ -20,6 +20,6 @@ MODEL:
     FEATURE_EXTRACTOR: "FPN2MLPFeatureExtractor"
     PREDICTOR: "FPNPredictor"
 DATASETS:
-  TEST: ("coco_2014_minival",)
+  TEST: ("instances_val2017",)
 DATALOADER:
   SIZE_DIVISIBILITY: 32

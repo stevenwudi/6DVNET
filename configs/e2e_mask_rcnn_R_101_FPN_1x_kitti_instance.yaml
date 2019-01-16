@@ -32,11 +32,12 @@ MODEL:
   MASK_ON: True
 DATASETS:
   TRAIN: ("kitti_instance_train",)
-  TEST: ("kitti_instance_test",)
+  TEST: ("kitti_instance_train",) #TEST: ("kitti_instance_test",)
 
 INPUT:
   MIN_SIZE_TRAIN: 800
   MAX_SIZE_TRAIN: 1242
+  MAX_SIZE_TEST : 1242
 
 DATALOADER:
   SIZE_DIVISIBILITY: 32
