@@ -22,7 +22,9 @@ visualizer = CarPoseVisualizer(setting)
 visualizer.load_car_models()
 
 img_list = ['171206_034636094_Camera_5']
-car_pose_file = '/media/SSD_1TB/ApolloScape/ECCV2018_apollo/train/' + '%s.json' % img_list[0]
+#img_list = ['180114_024339575_Camera_5']
+car_pose_dir = dataset_dir + 'car_poses/'
+car_pose_file = car_pose_dir + '%s.json' % img_list[0]
 
 for img in tqdm(img_list):
     setting = Setting(img, dataset_dir)
