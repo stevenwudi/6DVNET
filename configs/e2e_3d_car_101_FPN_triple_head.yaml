@@ -1,0 +1,53 @@
+MODEL:
+  META_ARCHITECTURE: "GeneralizedRCNN"
+  #WEIGHT: "/media/SSD_1TB/Kitti/experiments/e2e_mask_rcnn_R_101_FPN_1x_kitti_instance/Jan10-23-02_n606_step/model_0002500.pth"
+  WEIGHT: "catalog://ImageNetPretrained/MSRA/R-101"
+  BACKBONE:
+    CONV_BODY: "R-101-FPN"
+    OUT_CHANNELS: 256
+  RPN:
+    USE_FPN: True
+    ANCHOR_STRIDE: (4, 8, 16, 32, 64)
+    PRE_NMS_TOP_N_TRAIN: 2000
+    PRE_NMS_TOP_N_TEST: 1000
+    POST_NMS_TOP_N_TEST: 1000
+    FPN_POST_NMS_TOP_N_TEST: 1000
+  ROI_HEADS:
+    USE_FPN: True
+  ROI_BOX_HEAD:
+    NUM_CLASSES: 2
+    POOLER_RESOLUTION: 7
+    POOLER_SCALES: (0.25, 0.125, 0.0625, 0.03125)
+    POOLER_SAMPLING_RATIO: 2
+    FEATURE_EXTRACTOR: "FPN2MLPFeatureExtractor"
+    PREDICTOR: "FPNPredictor"
+  ROI_MASK_HEAD:
+    POOLER_SCALES: (0.25, 0.125, 0.0625, 0.03125)
+    FEATURE_EXTRACTOR: "MaskRCNNFPNFeatureExtractor"
+    PREDICTOR: "MaskRCNNC4Predictor"
+    POOLER_RESOLUTION: 14
+    POOLER_SAMPLING_RATIO: 2
+    RESOLUTION: 28
+    SHARE_BOX_FEATURE_EXTRACTOR: False
+  MASK_ON: True
+
+DATASETS:
+  TRAIN: ("Apollo_3d_car_train", "Apollo_3d_car_val")
+  TEST: ("Apollo_3d_car_test",)
+
+INPUT:
+  MIN_SIZE_TRAIN: 1200
+  MAX_SIZE_TRAIN: 3384
+  MAX_SIZE_TEST : 3384
+
+DATALOADER:
+  SIZE_DIVISIBILITY: 32
+
+SOLVER:
+  WEIGHT_DECAY: 0.0001
+  STEPS: (5000, 8000)
+  MAX_ITER: 10000
+  #https://github.com/facebookresearch/Detectron/blob/master/configs/getting_started/tutorial_1gpu_e2e_faster_rcnn_R-50-FPN.yaml#L14-L30
+  IMS_PER_BATCH: 1
+  BASE_LR:   0.0025
+  CHECKPOINT_PERIOD : 1000

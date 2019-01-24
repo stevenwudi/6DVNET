@@ -76,7 +76,10 @@ def _quantize(x, bins):
 def _compute_aspect_ratios(dataset):
     aspect_ratios = []
     for i in range(len(dataset)):
-        img_info = dataset.get_img_info(i)
+        if type(dataset.get_img_info(i)) is dict:
+            img_info = dataset.get_img_info(i)
+        else:
+            img_info = dataset.get_img_info(i)()
         aspect_ratio = float(img_info["height"]) / float(img_info["width"])
         aspect_ratios.append(aspect_ratio)
     return aspect_ratios
@@ -156,9 +159,7 @@ def make_data_loader(cfg, is_train=True, is_distributed=False, start_iter=0):
     data_loaders = []
     for dataset in datasets:
         sampler = make_data_sampler(dataset, shuffle, is_distributed)
-        batch_sampler = make_batch_data_sampler(
-            dataset, sampler, aspect_grouping, images_per_gpu, num_iters, start_iter
-        )
+        batch_sampler = make_batch_data_sampler(dataset, sampler, aspect_grouping, images_per_gpu, num_iters, start_iter)
         collator = BatchCollator(cfg.DATALOADER.SIZE_DIVISIBILITY)
         num_workers = cfg.DATALOADER.NUM_WORKERS
         data_loader = torch.utils.data.DataLoader(

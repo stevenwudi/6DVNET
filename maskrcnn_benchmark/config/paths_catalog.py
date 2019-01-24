@@ -7,6 +7,16 @@ import os
 class DatasetCatalog(object):
     DATA_DIR = "datasets"
     DATASETS = {
+        "Apollo_3d_car_train": {
+            "dataset_dir": "/media/SSD_1TB/ApolloScape/ECCV2018_apollo/train",
+        },
+        "Apollo_3d_car_val": {
+            "dataset_dir": "/media/SSD_1TB/ApolloScape/ECCV2018_apollo/train",
+        },
+        "Apollo_3d_car_test": {
+            "dataset_dir": "/media/SSD_1TB/ApolloScape/ECCV2018_apollo/test",
+        },
+
         "kitti_instance_train": {
             "img_dir": "/media/SSD_1TB/Kitti/data_semantics/training/image_2",
             "ann_file": "/media/SSD_1TB/Kitti/data_semantics/training/instance"
@@ -157,7 +167,14 @@ class DatasetCatalog(object):
                 factory='KittiInstanceDataset',
                 args=args,
             )
-
+        elif "Apollo_3d_car" in name:
+            attrs = DatasetCatalog.DATASETS[name]
+            args = dict(dataset_dir=attrs['dataset_dir'],
+                        list_flag=name.split('_')[-1])
+            return dict(
+                factory='Car3D',
+                args=args,
+            )
         raise RuntimeError("Dataset not available: {}".format(name))
 
 

@@ -29,7 +29,7 @@ def do_kitti_evaluation(
     pred_boxlists = []
     gt_boxlists = []
     for image_id, prediction in enumerate(predictions):
-        img_info = dataset.get_img_info(image_id)
+        img_info = dataset.get_img_info
         if len(prediction) == 0:
             continue
         image_width = img_info["width"]

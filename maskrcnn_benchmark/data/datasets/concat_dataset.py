@@ -20,4 +20,4 @@ class ConcatDataset(_ConcatDataset):
 
     def get_img_info(self, idx):
         dataset_idx, sample_idx = self.get_idxs(idx)
-        return self.datasets[dataset_idx].get_img_info(sample_idx)
+        return self.datasets[dataset_idx].get_img_info

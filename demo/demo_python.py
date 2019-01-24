@@ -26,6 +26,7 @@ def imshow(img):
     plt.axis("off")
 
 config_file = "../configs/caffe2/e2e_mask_rcnn_R_50_FPN_1x_caffe2.yaml"
+config_file = "../configs/caffe2/e2e_mask_rcnn_R_101_FPN_1x_caffe2.yaml"
 
 # update the config options with the config file
 cfg.merge_from_file(config_file)
@@ -40,7 +41,7 @@ coco_demo = COCODemo(
 # load image and then run prediction
 #image = load("http://farm3.staticflickr.com/2469/3915380994_2e611b1779_z.jpg")
 
-image = Image.open('/media/samsumg_1tb/coco/train2017/000000579043.jpg')
+image = Image.open('/media/HDD_4TB/MSCOCO/images/train2017/000000579043.jpg')
 image = np.array(image)[:, :, [2, 1, 0]]
 
 predictions = coco_demo.run_on_opencv_image(image)

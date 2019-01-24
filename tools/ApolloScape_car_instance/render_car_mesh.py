@@ -429,7 +429,7 @@ class CarPoseVisualizer(object):
         save_set_dir = os.path.join(save_dir, settings)
         if not os.path.exists(save_set_dir):
             os.mkdir(save_set_dir)
-        fig.savefig(os.path.join(save_dir, settings, image_name + '.png'), dpi=100)
+        fig.savefig(os.path.join(save_dir, settings, image_name + '.png'), dpi=50)
 
         return image
 
