@@ -16,6 +16,8 @@ from ..roi_heads.roi_heads import build_roi_heads
 class GeneralizedRCNN(nn.Module):
     """
     Main class for Generalized R-CNN. Currently supports boxes and masks.
+    Di Wu added the functionality of 3D car instance for:
+    http://apolloscape.auto/car_instance.html
     It consists of three main parts:
     - backbone
     = rpn
@@ -52,7 +54,6 @@ class GeneralizedRCNN(nn.Module):
             x, result, detector_losses = self.roi_heads(features, proposals, targets)
         else:
             # RPN-only models don't have roi_heads
-            x = features
             result = proposals
             detector_losses = {}
 

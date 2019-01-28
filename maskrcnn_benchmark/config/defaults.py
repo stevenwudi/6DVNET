@@ -23,6 +23,10 @@ _C = CN()
 _C.MODEL = CN()
 _C.MODEL.RPN_ONLY = False
 _C.MODEL.MASK_ON = False
+
+# Indicates the model makes Pose car class predictions (as in Mask R-CNN for keypoints)
+_C.MODEL.CAR_CLS_HEAD_ON = False
+
 _C.MODEL.DEVICE = "cuda"
 _C.MODEL.META_ARCHITECTURE = "GeneralizedRCNN"
 
@@ -198,6 +202,13 @@ _C.MODEL.ROI_MASK_HEAD.SHARE_BOX_FEATURE_EXTRACTOR = True
 _C.MODEL.ROI_MASK_HEAD.POSTPROCESS_MASKS = False
 _C.MODEL.ROI_MASK_HEAD.POSTPROCESS_MASKS_THRESHOLD = 0.5
 
+
+_C.MODEL.ROI_CAR_CLS_ROT_HEAD = CN()
+_C.MODEL.ROI_CAR_CLS_ROT_HEAD.FEATURE_EXTRACTOR = "FPN2MLPFeatureExtractor"
+_C.MODEL.ROI_CAR_CLS_ROT_HEAD.POOLER_RESOLUTION = 14
+_C.MODEL.ROI_CAR_CLS_ROT_HEAD.POOLER_SAMPLING_RATIO = 0
+_C.MODEL.ROI_CAR_CLS_ROT_HEAD.POOLER_SCALES = (1.0 / 16,)
+_C.MODEL.ROI_CAR_CLS_ROT_HEAD.MLP_HEAD_DIM = 1024
 # ---------------------------------------------------------------------------- #
 # ResNe[X]t options (ResNets = {ResNet, ResNeXt}
 # Note that parts of a resnet may be used for both the backbone and the head

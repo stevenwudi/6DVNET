@@ -46,6 +46,9 @@ def build_roi_heads(cfg):
         roi_heads.append(("box", build_roi_box_head(cfg)))
     if cfg.MODEL.MASK_ON:
         roi_heads.append(("mask", build_roi_mask_head(cfg)))
+    if cfg.MODEL.CAR_CLS_HEAD_ON:
+        roi_heads.append(('car_cls_rot'), build_roi_car_cls_rot_head(cfg))
+
 
     # combine individual heads in a single module
     if roi_heads:
