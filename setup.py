@@ -65,5 +65,4 @@ setup(
     packages=find_packages(exclude=("configs", "tests",)),
     # install_requires=requirements,
     ext_modules=get_extensions(),
-    cmdclass={"build_ext": torch.utils.cpp_extension.BuildExtension},
-)
+    cmdclass={"build_ext": torch.utils.cpp_extension.BuildExtension}, install_requires=[ 'torch' ])

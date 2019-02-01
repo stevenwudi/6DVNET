@@ -45,7 +45,7 @@ def project_masks_on_boxes(segmentation_masks, proposals, discretization_size):
 
 
 class MaskRCNNLossComputation(object):
-    def __init__(self, proposal_matcher, discretization_size):
+    def __init__(self, proposal_matcher, discretization_size=28):
         """
         Arguments:
             proposal_matcher (Matcher)

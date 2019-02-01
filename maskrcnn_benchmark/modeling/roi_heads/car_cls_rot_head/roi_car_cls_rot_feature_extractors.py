@@ -42,7 +42,7 @@ class FPN2MLP2FeatureExtractor(nn.Module):
 
 _ROI_CAR_CLS_ROT_FEATURE_EXTRACTORS = {
     "ResNet50Conv5ROIFeatureExtractor": ResNet50Conv5ROIFeatureExtractor,
-    "FPN2MLPFeatureExtractor": FPN2MLP2FeatureExtractor,
+    "FPN2MLP2FeatureExtractor": FPN2MLP2FeatureExtractor,
 }
 
 

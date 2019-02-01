@@ -209,6 +209,14 @@ _C.MODEL.ROI_CAR_CLS_ROT_HEAD.POOLER_RESOLUTION = 14
 _C.MODEL.ROI_CAR_CLS_ROT_HEAD.POOLER_SAMPLING_RATIO = 0
 _C.MODEL.ROI_CAR_CLS_ROT_HEAD.POOLER_SCALES = (1.0 / 16,)
 _C.MODEL.ROI_CAR_CLS_ROT_HEAD.MLP_HEAD_DIM = 1024
+_C.MODEL.ROI_CAR_CLS_ROT_HEAD.PREDICTOR = "FPNPredictor"
+_C.MODEL.ROI_CAR_CLS_ROT_HEAD.NUMBER_CARS = 34
+_C.MODEL.ROI_CAR_CLS_ROT_HEAD.SHARE_BOX_FEATURE_EXTRACTOR = True
+
+_C.MODEL.ROI_CAR_CLS_ROT_HEAD.ROT_LOSS = "L1"  # ["L1", "MSE", "ARCCOS", "HUBER"]
+_C.MODEL.ROI_CAR_CLS_ROT_HEAD.ROT_HUBER_THRESHOLD = 5  # in degreee
+# Find tune car according to it's appearance
+_C.MODEL.ROI_CAR_CLS_ROT_HEAD.CE_CAR_CLS_FINETUNE_WIGHT = []
 # ---------------------------------------------------------------------------- #
 # ResNe[X]t options (ResNets = {ResNet, ResNeXt}
 # Note that parts of a resnet may be used for both the backbone and the head

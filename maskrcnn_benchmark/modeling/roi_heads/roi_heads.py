@@ -3,6 +3,7 @@ import torch
 
 from .box_head.box_head import build_roi_box_head
 from .mask_head.mask_head import build_roi_mask_head
+from .car_cls_rot_head.car_cls_rot_head import build_roi_car_cls_rot_head
 
 
 class CombinedROIHeads(torch.nn.ModuleDict):
@@ -16,6 +17,8 @@ class CombinedROIHeads(torch.nn.ModuleDict):
         self.cfg = cfg.clone()
         if cfg.MODEL.MASK_ON and cfg.MODEL.ROI_MASK_HEAD.SHARE_BOX_FEATURE_EXTRACTOR:
             self.mask.feature_extractor = self.box.feature_extractor
+        if cfg.MODEL.CAR_CLS_HEAD_ON and cfg.MODEL.ROI_CAR_CLS_ROT_HEAD.SHARE_BOX_FEATURE_EXTRACTOR:
+            self.car_cls_rot.feature_extractor = self.box.feature_extractor
 
     def forward(self, features, proposals, targets=None):
         losses = {}
@@ -26,15 +29,20 @@ class CombinedROIHeads(torch.nn.ModuleDict):
             mask_features = features
             # optimization: during training, if we share the feature extractor between
             # the box and the mask heads, then we can reuse the features already computed
-            if (
-                self.training
-                and self.cfg.MODEL.ROI_MASK_HEAD.SHARE_BOX_FEATURE_EXTRACTOR
-            ):
+            if self.training and self.cfg.MODEL.ROI_MASK_HEAD.SHARE_BOX_FEATURE_EXTRACTOR:
                 mask_features = x
             # During training, self.box() will return the unaltered proposals as "detections"
             # this makes the API consistent during training and testing
             x, detections, loss_mask = self.mask(mask_features, detections, targets)
             losses.update(loss_mask)
+
+        if self.cfg.MODEL.CAR_CLS_HEAD_ON:
+            car_cls_rot_features = features
+            if self.training and self.cfg.MODEL.ROI_CAR_CLS_ROT_HEAD.SHARE_BOX_FEATURE_EXTRACTOR:
+                mask_features = x
+            x, detections, loss_car_cls = self.car_cls_rot(car_cls_rot_features, detections, targets)
+            losses.update(loss_car_cls)
+
         return x, detections, losses
 
 
@@ -47,8 +55,7 @@ def build_roi_heads(cfg):
     if cfg.MODEL.MASK_ON:
         roi_heads.append(("mask", build_roi_mask_head(cfg)))
     if cfg.MODEL.CAR_CLS_HEAD_ON:
-        roi_heads.append(('car_cls_rot'), build_roi_car_cls_rot_head(cfg))
-
+        roi_heads.append(('car_cls_rot', build_roi_car_cls_rot_head(cfg)))
 
     # combine individual heads in a single module
     if roi_heads:
