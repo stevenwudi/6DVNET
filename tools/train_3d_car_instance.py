@@ -59,7 +59,7 @@ def parse_args():
     return parser.parse_args()
 
 
-def train(cfg, local_rank, distributed, use_tensorboard=False):
+def train(cfg, local_rank, distributed, use_tensorboard=False, logger=None):
     arguments = {"iteration": 0}
     data_loader = make_data_loader(
         cfg,
@@ -85,7 +85,7 @@ def train(cfg, local_rank, distributed, use_tensorboard=False):
     output_dir = cfg.OUTPUT_DIR
 
     save_to_disk = get_rank() == 0
-    checkpointer = DetectronCheckpointer(cfg, model, optimizer, scheduler, output_dir, save_to_disk)
+    checkpointer = DetectronCheckpointer(cfg, model, optimizer, scheduler, output_dir, save_to_disk, logger=logger)
     extra_checkpoint_data = checkpointer.load(cfg.MODEL.WEIGHT)
     arguments.update(extra_checkpoint_data)
 
@@ -185,7 +185,8 @@ def main():
         cfg=cfg,
         local_rank=args.local_rank,
         distributed=args.distributed,
-        use_tensorboard=args.use_tensorboard
+        use_tensorboard=args.use_tensorboard,
+        logger=logger,
     )
     if not args.skip_test:
         test(cfg, model, args.distributed)

@@ -21,5 +21,5 @@ def setup_logger(name, save_dir, distributed_rank):
         fh.setLevel(logging.DEBUG)
         fh.setFormatter(formatter)
         logger.addHandler(fh)
-
+    logger.propagate = False
     return logger

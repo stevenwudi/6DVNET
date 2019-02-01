@@ -59,8 +59,12 @@ class GeneralizedRCNN(nn.Module):
 
         if self.training:
             losses = {}
-            losses.update(detector_losses)
-            losses.update(proposal_losses)
+            # Prepend the key name so as to allow better visualisation in tensorboard
+            detector_losses_tb = {'detector_losses/' + k: v for k, v in detector_losses.items()}
+            proposal_losses_tb = {'proposal_losses/' + k: v for k, v in proposal_losses.items()}
+
+            losses.update(detector_losses_tb)
+            losses.update(proposal_losses_tb)
             return losses
 
         return result

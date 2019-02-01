@@ -11,7 +11,7 @@ import argparse
 import os
 # import matplotlib
 # matplotlib.use("TkAgg")
-os.environ['CUDA_VISIBLE_DEVICES'] = '3'
+os.environ['CUDA_VISIBLE_DEVICES'] = '2'
 
 import torch
 from maskrcnn_benchmark.config import cfg

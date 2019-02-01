@@ -40,7 +40,7 @@ class ROICarClsRotHead(torch.nn.Module):
         ce_weight = self.cfg.MODEL.ROI_CAR_CLS_ROT_HEAD.CE_CAR_CLS_FINETUNE_WIGHT
         loss_cls, loss_rot, accuracy_cls = self.loss_evaluator(proposals, cls_score, cls, rot_pred, targets, loss_type, ce_weight)
 
-        return x, all_proposals, dict(loss_cls=loss_cls, loss_rot=loss_rot, accuracy_cls=accuracy_cls)
+        return x, all_proposals, dict(loss_car_cls=loss_cls, loss_rot=loss_rot, accuracy_car_cls=accuracy_cls)
 
 
 def build_roi_car_cls_rot_head(cfg):

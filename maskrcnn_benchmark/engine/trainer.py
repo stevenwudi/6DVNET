@@ -79,17 +79,21 @@ def do_train(
         # reduce losses over all GPUs for logging purposes
         loss_dict_reduced = reduce_loss_dict(loss_dict)
         losses_reduced = sum(loss for loss in loss_dict_reduced.values())
-        meters.update(loss=losses_reduced, **loss_dict_reduced)
 
+        # Prepend the key name so as to allow better visualisation in tensorboard
+        loss_dict_reduced['detector_losses/total_loss'] = losses_reduced
+        meters.update(**loss_dict_reduced)
+        meters.update(lr=optimizer.param_groups[-1]['lr'])
         optimizer.zero_grad()
         losses.backward()
         optimizer.step()
 
         batch_time = time.time() - end
         end = time.time()
-        meters.update(time=batch_time, data=data_time)
+        process_time = {'time/batch_time': batch_time, 'time/data_time': data_time}
+        meters.update(**process_time)
 
-        eta_seconds = meters.time.global_avg * (max_iter - iteration)
+        eta_seconds = meters.meters['time/batch_time'].global_avg * (max_iter - iteration)
         eta_string = str(datetime.timedelta(seconds=int(eta_seconds)))
 
         if iteration % snapshot == 0 or iteration == max_iter:
