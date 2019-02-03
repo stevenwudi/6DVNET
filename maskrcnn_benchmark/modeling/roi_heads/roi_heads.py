@@ -4,6 +4,7 @@ import torch
 from .box_head.box_head import build_roi_box_head
 from .mask_head.mask_head import build_roi_mask_head
 from .car_cls_rot_head.car_cls_rot_head import build_roi_car_cls_rot_head
+from .trans_head.trans_head import build_trans_head
 
 
 class CombinedROIHeads(torch.nn.ModuleDict):
@@ -23,7 +24,11 @@ class CombinedROIHeads(torch.nn.ModuleDict):
     def forward(self, features, proposals, targets=None):
         losses = {}
         # TODO rename x to roi_box_features, if it doesn't increase memory consumption
-        x, detections, loss_box = self.box(features, proposals, targets)
+        if not self.cfg.MODEL.CAR_CLS_HEAD_ON:
+            x, detections, loss_box = self.box(features, proposals, targets)
+        else:
+            x, det_result, detections, loss_box = self.box(features, proposals, targets)
+
         losses.update(loss_box)
         if self.cfg.MODEL.MASK_ON:
             mask_features = features
@@ -43,6 +48,10 @@ class CombinedROIHeads(torch.nn.ModuleDict):
             x, detections, loss_car_cls = self.car_cls_rot(car_cls_rot_features, detections, targets)
             losses.update(loss_car_cls)
 
+            if self.cfg.MODEL.TRANS_HEAD_ON:
+                trans_pred, loss_trans = self.trans(x, det_result, targets)
+                losses.update(loss_trans)
+
         return x, detections, losses
 
 
@@ -55,7 +64,10 @@ def build_roi_heads(cfg):
     if cfg.MODEL.MASK_ON:
         roi_heads.append(("mask", build_roi_mask_head(cfg)))
     if cfg.MODEL.CAR_CLS_HEAD_ON:
-        roi_heads.append(('car_cls_rot', build_roi_car_cls_rot_head(cfg)))
+        roi_heads.append(("car_cls_rot", build_roi_car_cls_rot_head(cfg)))
+        # We assume the feature for translational head will depend upon the car cls rot head
+        if cfg.MODEL.TRANS_HEAD_ON:
+            roi_heads.append(("trans", build_trans_head(cfg)))
 
     # combine individual heads in a single module
     if roi_heads:

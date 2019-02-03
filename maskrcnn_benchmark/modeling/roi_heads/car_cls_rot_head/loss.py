@@ -61,16 +61,15 @@ class CarClsRotLoss(object):
 
         return labels, car_cat_classes, quaternions
 
-    def __call__(self, proposals, cls_score, cls, rot_pred, targets, loss_type, ce_weight):
+    def __call__(self, proposals, cls_score, rot_pred, targets, loss_type, ce_weight):
         """
 
-        :param proposals:
-        :param cls_score:
-        :param cls:
-        :param rot_pred:
-        :param targets:
-        :param loss_type:
-        :param ce_weight:
+        :param proposals: (list[BoxList])
+        :param cls_score: score for car car classification
+        :param rot_pred: rotation prediction (quaternions)
+        :param targets: (list[BoxList])
+        :param loss_type: loss type for rotation prediction ['L1', 'MSE', 'ARCCOS', 'HUBER']
+        :param ce_weight: cross entropy weight to balance out the infrequent car classes
         :return:
         """
         labels, car_cat_classes, quaternions = self.prepare_targets(proposals, targets)
@@ -109,7 +108,7 @@ class CarClsRotLoss(object):
             N = diff.size(0)  # batch size
             loss_rot = loss_rot.view(-1).sum(0) / N
         elif loss_type == 'HUBER':
-            degree = self.MODEL.ROI_CAR_CLS_ROT_HEAD.ROT_HUBER_THRESHOLD
+            degree = self.cfg.MODEL.ROI_CAR_CLS_ROT_HEAD.ROT_HUBER_THRESHOLD
             loss_rot = huber_loss_rot(rot_pred, quaternions, device_id, degree)
 
         return loss_cls, loss_rot, accuracy_cls

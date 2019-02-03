@@ -35,7 +35,7 @@ def parse_args():
     parser = argparse.ArgumentParser(description="PyTorch Object Detection Training")
     parser.add_argument("--config-file", default="../configs/e2e_3d_car_101_FPN_triple_head.yaml", metavar="FILE", help="path to config file", type=str)
     parser.add_argument("--local_rank", type=int, default=0)
-    parser.add_argument("--skip-test", action="store_true", dest="skip_test", help="Do not test the final model")
+    parser.add_argument("--skip-test", default=False, dest="skip_test", help="Do not test the final model")
 
     # Optional
     parser.add_argument("opts", help="Modify config options using the command-line", default=None, nargs=argparse.REMAINDER)

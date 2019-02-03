@@ -18,13 +18,14 @@ class FastRCNNLossComputation(object):
     Also supports FPN
     """
 
-    def __init__(self, proposal_matcher, fg_bg_sampler, box_coder):
+    def __init__(self, cfg, proposal_matcher, fg_bg_sampler, box_coder):
         """
         Arguments:
             proposal_matcher (Matcher)
             fg_bg_sampler (BalancedPositiveNegativeSampler)
             box_coder (BoxCoder)
         """
+        self.cfg = cfg.clone()
         self.proposal_matcher = proposal_matcher
         self.fg_bg_sampler = fg_bg_sampler
         self.box_coder = box_coder
@@ -33,7 +34,11 @@ class FastRCNNLossComputation(object):
         match_quality_matrix = boxlist_iou(target, proposal)
         matched_idxs = self.proposal_matcher(match_quality_matrix)
         # Fast RCNN only need "labels" field for selecting the targets
-        target = target.copy_with_fields("labels")
+        if not self.cfg.MODEL.TRANS_HEAD_ON:
+            target = target.copy_with_fields("labels")
+        else:
+            target = target.copy_with_fields(["labels", "poses"])
+
         # get the targets corresponding GT for each proposal
         # NB: need to clamp the indices because we can have a single
         # GT in the image, and matched_idxs can be -2, which goes
@@ -45,10 +50,9 @@ class FastRCNNLossComputation(object):
     def prepare_targets(self, proposals, targets):
         labels = []
         regression_targets = []
+        poses = []
         for proposals_per_image, targets_per_image in zip(proposals, targets):
-            matched_targets = self.match_targets_to_proposals(
-                proposals_per_image, targets_per_image
-            )
+            matched_targets = self.match_targets_to_proposals(proposals_per_image, targets_per_image)
             matched_idxs = matched_targets.get_field("matched_idxs")
 
             labels_per_image = matched_targets.get_field("labels")
@@ -63,14 +67,19 @@ class FastRCNNLossComputation(object):
             labels_per_image[ignore_inds] = -1  # -1 is ignored by sampler
 
             # compute regression targets
-            regression_targets_per_image = self.box_coder.encode(
-                matched_targets.bbox, proposals_per_image.bbox
-            )
+            regression_targets_per_image = self.box_coder.encode(matched_targets.bbox, proposals_per_image.bbox)
 
             labels.append(labels_per_image)
             regression_targets.append(regression_targets_per_image)
-
-        return labels, regression_targets
+            if self.cfg.MODEL.TRANS_HEAD_ON:
+                poses_per_image = matched_targets.get_field("poses")
+                poses_per_image[bg_inds] = 0
+                poses_per_image[ignore_inds] = 0
+                poses.append(poses_per_image)
+        if self.cfg.MODEL.TRANS_HEAD_ON:
+            return labels, poses, regression_targets
+        else:
+            return labels, regression_targets
 
     def subsample(self, proposals, targets):
         """
@@ -82,25 +91,29 @@ class FastRCNNLossComputation(object):
             proposals (list[BoxList])
             targets (list[BoxList])
         """
-
-        labels, regression_targets = self.prepare_targets(proposals, targets)
+        if self.cfg.MODEL.TRANS_HEAD_ON:
+            labels, poses, regression_targets = self.prepare_targets(proposals, targets)
+        else:
+            labels, regression_targets = self.prepare_targets(proposals, targets)
         sampled_pos_inds, sampled_neg_inds = self.fg_bg_sampler(labels)
 
         proposals = list(proposals)
-        # add corresponding label and regression_targets information to the bounding boxes
-        for labels_per_image, regression_targets_per_image, proposals_per_image in zip(
-            labels, regression_targets, proposals
-        ):
-            proposals_per_image.add_field("labels", labels_per_image)
-            proposals_per_image.add_field(
-                "regression_targets", regression_targets_per_image
-            )
+        if self.cfg.MODEL.TRANS_HEAD_ON:
+            # add corresponding label and regression_targets information to the bounding boxes
+            for labels_per_image, posess_per_image, regression_targets_per_image, proposals_per_image in zip(labels, poses, regression_targets, proposals):
+                proposals_per_image.add_field("labels", labels_per_image)
+                proposals_per_image.add_field("poses", posess_per_image)
+                proposals_per_image.add_field("regression_targets", regression_targets_per_image)
+
+        else:
+            # add corresponding label and regression_targets information to the bounding boxes
+            for labels_per_image, regression_targets_per_image, proposals_per_image in zip(labels, regression_targets, proposals):
+                proposals_per_image.add_field("labels", labels_per_image)
+                proposals_per_image.add_field("regression_targets", regression_targets_per_image)
 
         # distributed sampled proposals, that were obtained on all feature maps
         # concatenated via the fg_bg_sampler, into individual feature map levels
-        for img_idx, (pos_inds_img, neg_inds_img) in enumerate(
-            zip(sampled_pos_inds, sampled_neg_inds)
-        ):
+        for img_idx, (pos_inds_img, neg_inds_img) in enumerate(zip(sampled_pos_inds, sampled_neg_inds)):
             img_sampled_inds = torch.nonzero(pos_inds_img | neg_inds_img).squeeze(1)
             proposals_per_image = proposals[img_idx][img_sampled_inds]
             proposals[img_idx] = proposals_per_image
@@ -170,6 +183,6 @@ def make_roi_box_loss_evaluator(cfg):
         cfg.MODEL.ROI_HEADS.BATCH_SIZE_PER_IMAGE, cfg.MODEL.ROI_HEADS.POSITIVE_FRACTION
     )
 
-    loss_evaluator = FastRCNNLossComputation(matcher, fg_bg_sampler, box_coder)
+    loss_evaluator = FastRCNNLossComputation(cfg, matcher, fg_bg_sampler, box_coder)
 
     return loss_evaluator

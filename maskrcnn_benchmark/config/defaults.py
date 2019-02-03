@@ -26,6 +26,8 @@ _C.MODEL.MASK_ON = False
 
 # Indicates the model makes Pose car class predictions (as in Mask R-CNN for keypoints)
 _C.MODEL.CAR_CLS_HEAD_ON = False
+# Translational estimation
+_C.MODEL.TRANS_HEAD_ON = False
 
 _C.MODEL.DEVICE = "cuda"
 _C.MODEL.META_ARCHITECTURE = "GeneralizedRCNN"
@@ -217,6 +219,18 @@ _C.MODEL.ROI_CAR_CLS_ROT_HEAD.ROT_LOSS = "L1"  # ["L1", "MSE", "ARCCOS", "HUBER"
 _C.MODEL.ROI_CAR_CLS_ROT_HEAD.ROT_HUBER_THRESHOLD = 5  # in degreee
 # Find tune car according to it's appearance
 _C.MODEL.ROI_CAR_CLS_ROT_HEAD.CE_CAR_CLS_FINETUNE_WIGHT = []
+
+
+_C.MODEL.TRANS_HEAD = CN()
+_C.MODEL.TRANS_HEAD.FEATURE_EXTRACTOR = "MLPFeatureExtractor"
+_C.MODEL.TRANS_HEAD.PREDICTOR = "MLPCONCATPredictor"
+_C.MODEL.TRANS_HEAD.MLP_HEAD_DIM = 100
+_C.MODEL.TRANS_HEAD.INPUT_DIM = 4
+_C.MODEL.TRANS_HEAD.OUTPUT_DIM = 3
+
+_C.MODEL.TRANS_HEAD.TRANS_LOSS = "HUBER"
+# Translation Huber treshold: we care more about the inside, stabilise the learning process
+_C.MODEL.TRANS_HEAD.TRANS_HUBER_THRESHOLD = 2.8
 # ---------------------------------------------------------------------------- #
 # ResNe[X]t options (ResNets = {ResNet, ResNeXt}
 # Note that parts of a resnet may be used for both the backbone and the head
