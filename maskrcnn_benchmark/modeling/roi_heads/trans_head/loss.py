@@ -76,7 +76,7 @@ class TransLoss(object):
             # mask scores are only computed on positive samples
             positive_inds = torch.nonzero(labels_per_image > 0).squeeze(1)
 
-            label_trans = matched_targets.get_field("quaternions")
+            label_trans = matched_targets.get_field("poses")[:, 3:]
             label_trans = label_trans[positive_inds]
 
             labels.append(labels_per_image)

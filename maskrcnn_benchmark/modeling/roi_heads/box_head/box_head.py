@@ -49,16 +49,16 @@ class ROIBoxHead(torch.nn.Module):
         class_logits, box_regression = self.predictor(x)
 
         if not self.training and not self.cfg.MODEL.TRANS_HEAD_ON:
-            result = self.post_processor((class_logits, box_regression), proposals)
+            result, result_all = self.post_processor((class_logits, box_regression), proposals)
             return x, result, {}
 
         loss_classifier, loss_box_reg = self.loss_evaluator([class_logits], [box_regression])
 
         if self.cfg.MODEL.TRANS_HEAD_ON:
-            result = self.post_processor((class_logits, box_regression), proposals)
+            result, result_all = self.post_processor((class_logits, box_regression), proposals)
             return (
                 x,
-                result,
+                result_all,
                 proposals,
                 dict(loss_classifier=loss_classifier, loss_box_reg=loss_box_reg),
             )

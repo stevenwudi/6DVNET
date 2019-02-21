@@ -231,6 +231,10 @@ _C.MODEL.TRANS_HEAD.OUTPUT_DIM = 3
 _C.MODEL.TRANS_HEAD.TRANS_LOSS = "HUBER"
 # Translation Huber treshold: we care more about the inside, stabilise the learning process
 _C.MODEL.TRANS_HEAD.TRANS_HUBER_THRESHOLD = 2.8
+
+_C.MODEL.TRANS_HEAD.CAMERA_INTRINSIC = (2304.54786556982, 2305.875668062, 1686.23787612802, 1354.98486439791)
+
+_C.MODEL.TRANS_HEAD.TRANS_LOSS_BETA = 0.1
 # ---------------------------------------------------------------------------- #
 # ResNe[X]t options (ResNets = {ResNet, ResNeXt}
 # Note that parts of a resnet may be used for both the backbone and the head
