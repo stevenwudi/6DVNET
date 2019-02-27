@@ -44,6 +44,9 @@ _C.MODEL.WEIGHT = ""
 _C.INPUT = CN()
 # Size of the smallest side of the image during training
 _C.INPUT.MIN_SIZE_TRAIN = 800  # (800,)
+
+# Size of the smallest side of the image during training
+_C.INPUT.MIN_SIZE_TRAIN_RANGE = (1200, 2710)  # (800,)
 # Maximum size of the side of the image during training
 _C.INPUT.MAX_SIZE_TRAIN = 1333
 # Size of the smallest side of the image during testing
@@ -219,6 +222,9 @@ _C.MODEL.ROI_CAR_CLS_ROT_HEAD.ROT_LOSS = "L1"  # ["L1", "MSE", "ARCCOS", "HUBER"
 _C.MODEL.ROI_CAR_CLS_ROT_HEAD.ROT_HUBER_THRESHOLD = 5  # in degreee
 # Find tune car according to it's appearance
 _C.MODEL.ROI_CAR_CLS_ROT_HEAD.CE_CAR_CLS_FINETUNE_WIGHT = []
+# Whether the quaternion is confined to a hemisphere
+_C.MODEL.ROI_CAR_CLS_ROT_HEAD.QUATERNION_HEMISPHERE = False
+
 
 
 _C.MODEL.TRANS_HEAD = CN()

@@ -12,7 +12,7 @@ import argparse
 import os
 import matplotlib
 matplotlib.use("TkAgg")
-os.environ['CUDA_VISIBLE_DEVICES'] = '3'
+os.environ['CUDA_VISIBLE_DEVICES'] = '0,1,3'
 
 import torch
 from maskrcnn_benchmark.config import cfg
@@ -40,10 +40,8 @@ def parse_args():
     # Optional
     parser.add_argument("opts", help="Modify config options using the command-line", default=None, nargs=argparse.REMAINDER)
     parser.add_argument('--dataset', dest='dataset', default='ApolloScape', help='Dataset to use')
-
     parser.add_argument('--disp_interval', help='Display training info every N iterations', default=20, type=int)
     parser.add_argument('--no_cuda', dest='cuda', help='Do not use CUDA device', action='store_false')
-
     parser.add_argument('--output_dir', default='/media/SSD_1TB/ApolloScape/6DVNET_experiments')
 
     # Epoch

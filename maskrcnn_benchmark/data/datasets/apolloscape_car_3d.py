@@ -12,10 +12,11 @@ from maskrcnn_benchmark.data.datasets import car_models
 from maskrcnn_benchmark.structures.bounding_box import BoxList
 from maskrcnn_benchmark.utils.geometry import euler_angles_to_rotation_matrix, euler_angles_to_quaternions
 from maskrcnn_benchmark.structures.segmentation_mask import SegmentationMask
+from tools.ApolloScape_car_instance.utils.utils import quaternion_upper_hemispher
 
 
 class Car3D(torch.utils.data.Dataset):
-    def __init__(self, dataset_dir, list_flag, transforms):
+    def __init__(self, cfg, dataset_dir, list_flag, transforms):
         """
         Constructor of ApolloScape helper class for reading and visualizing annotations.
         Modified from: https://github.com/ApolloScapeAuto/dataset-api/blob/master/car_instance/data.py
@@ -23,6 +24,7 @@ class Car3D(torch.utils.data.Dataset):
         :param image_folder (str): location to the folder that hosts images.
         :return:
         """
+        self.cfg = cfg.copy()
         self.dataset_dir = dataset_dir
         self.list_flag = list_flag
         self.transforms = transforms
@@ -109,6 +111,10 @@ class Car3D(torch.utils.data.Dataset):
         if self.list_flag in ['train', 'val']:
             target = self._add_gt_annotations_Car3d(idx, image_shape)
 
+        # We also change the size of image very iteration:
+        resize_size = np.random.randint(self.cfg['INPUT']['MIN_SIZE_TRAIN_RANGE'][0], self.cfg['INPUT']['MIN_SIZE_TRAIN_RANGE'][1])
+        self.transforms.transforms[0].min_size = resize_size
+
         if self.transforms is not None:
             img, target = self.transforms(img, target)
 
@@ -161,7 +167,11 @@ class Car3D(torch.utils.data.Dataset):
             #cv2.imwrite(os.path.join('/media/SSD_1TB/ApolloScape', self.img_list_all[idx] + '_' + str(i) + '_.jpg'), mask)
             x1, y1, x2, y2 = imgpts[:, 0].min(), imgpts[:, 1].min(), imgpts[:, 0].max(), imgpts[:, 1].max()
             boxes.append([x1, y1, x2, y2])
-            quaternions.append(euler_angles_to_quaternions(np.array(car_pose['pose'][:3]))[0])
+
+            q = euler_angles_to_quaternions(np.array(car_pose['pose'][:3]))[0]
+            if self.cfg['MODEL']['ROI_CAR_CLS_ROT_HEAD']['QUATERNION_HEMISPHERE']:
+                q = quaternion_upper_hemispher(q)
+            quaternions.append(q)
             car_cat_classes.append(np.where(self.unique_car_models == car_pose['car_id'])[0][0])
             poses.append(car_pose['pose'])
 

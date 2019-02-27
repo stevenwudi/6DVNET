@@ -234,5 +234,36 @@ def plot_images(images,
         plt.show()
 
 
+def quaternion_upper_hemispher(q):
+    """
+    The quaternion q and −q represent the same rotation be-
+    cause a rotation of θ in the direction v is equivalent to a
+    rotation of 2π − θ in the direction −v. One way to force
+    uniqueness of rotations is to require staying in the “upper
+    half” of S 3 . For example, require that a ≥ 0, as long as
+    the boundary case of a = 0 is handled properly because of
+    antipodal points at the equator of S 3 . If a = 0, then require
+    that b ≥ 0. However, if a = b = 0, then require that c ≥ 0
+    because points such as (0,0,−1,0) and (0,0,1,0) are the
+    same rotation. Finally, if a = b = c = 0, then only d = 1 is
+    allowed.
+    :param q:
+    :return:
+    """
+    a, b, c, d = q
+    if a < 0:
+        q = -q
+    if a == 0:
+        if b < 0:
+            q = -q
+        if b == 0:
+            if c < 0:
+                q = -q
+            if c == 0:
+                print(q)
+                q[3] = 0
+
+    return q
+
 if __name__ == '__main__':
     pass
