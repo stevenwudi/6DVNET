@@ -35,7 +35,7 @@ class PostProcessor(nn.Module):
             box_coder = BoxCoder(weights=(10., 10., 5., 5.))
         self.box_coder = box_coder
 
-    def forward(self, x, boxes):
+    def forward(self, x, boxes, train=True):
         """
         Arguments:
             x (tuple[tensor, tensor]): x contains the class logits
@@ -62,12 +62,12 @@ class PostProcessor(nn.Module):
         proposals = proposals.split(boxes_per_image, dim=0)
         class_prob = class_prob.split(boxes_per_image, dim=0)
 
-        if self.cfg.MODEL.TRANS_HEAD_ON:
+        if self.cfg.MODEL.TRANS_HEAD_ON and train:
             poses = [box.get_field('poses') for box in boxes]
 
         results = []
         result_all = []
-        if self.cfg.MODEL.TRANS_HEAD_ON:
+        if self.cfg.MODEL.TRANS_HEAD_ON and train:
             for prob, boxes_per_img, image_shape, pose in zip(class_prob, proposals, image_shapes, poses):
                 boxlist = self.prepare_boxlist(boxes_per_img, prob, image_shape, pose)
                 boxlist = boxlist.clip_to_image(remove_empty=False)
@@ -78,7 +78,7 @@ class PostProcessor(nn.Module):
             for prob, boxes_per_img, image_shape in zip(class_prob, proposals, image_shapes):
                 boxlist = self.prepare_boxlist(boxes_per_img, prob, image_shape)
                 boxlist = boxlist.clip_to_image(remove_empty=False)
-                boxlist, boxlist_all = self.filter_results(boxlist, num_classes)
+                boxlist, boxlist_all = self.filter_results(boxlist, num_classes, train)
                 results.append(boxlist)
                 result_all.append(boxlist_all)
 
@@ -105,7 +105,7 @@ class PostProcessor(nn.Module):
             boxlist.add_field("poses", poses)
         return boxlist
 
-    def filter_results(self, boxlist, num_classes):
+    def filter_results(self, boxlist, num_classes, train=True):
         """Returns bounding-box detection results by thresholding on scores and
         applying non-maximum suppression (NMS).
         """
@@ -113,7 +113,7 @@ class PostProcessor(nn.Module):
         # if we had multi-class NMS, we could perform this directly on the boxlist
         boxes = boxlist.bbox.reshape(-1, num_classes * 4)
         scores = boxlist.get_field("scores").reshape(-1, num_classes)
-        if self.cfg.MODEL.TRANS_HEAD_ON:
+        if self.cfg.MODEL.TRANS_HEAD_ON and train:
             poses = boxlist.get_field("poses")
 
         device = scores.device
@@ -128,7 +128,8 @@ class PostProcessor(nn.Module):
             boxes_j = boxes[inds, j * 4: (j + 1) * 4]
             boxlist_for_class = BoxList(boxes_j, boxlist.size, mode="xyxy")
             boxlist_for_class.add_field("scores", scores_j)
-            boxlist_for_class.add_field("poses", poses)
+            if self.cfg.MODEL.TRANS_HEAD_ON and train:
+                boxlist_for_class.add_field("poses", poses)
             num_labels = len(boxlist_for_class)
             boxlist_for_class.add_field("labels", torch.full((num_labels,), j, dtype=torch.int64, device=device))
             result_all.append(boxlist_for_class)

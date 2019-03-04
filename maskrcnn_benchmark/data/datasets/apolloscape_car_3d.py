@@ -16,7 +16,7 @@ from tools.ApolloScape_car_instance.utils.utils import quaternion_upper_hemisphe
 
 
 class Car3D(torch.utils.data.Dataset):
-    def __init__(self, cfg, dataset_dir, list_flag, transforms):
+    def __init__(self, cfg, dataset_dir, list_flag, transforms, training):
         """
         Constructor of ApolloScape helper class for reading and visualizing annotations.
         Modified from: https://github.com/ApolloScapeAuto/dataset-api/blob/master/car_instance/data.py
@@ -29,6 +29,7 @@ class Car3D(torch.utils.data.Dataset):
         self.list_flag = list_flag
         self.transforms = transforms
         self.img_list_all = []
+        self.training = training
 
         # Apollo 3d init
         Setting = namedtuple('Setting', ['image_name', 'data_dir'])
@@ -73,7 +74,8 @@ class Car3D(torch.utils.data.Dataset):
         car_models_all = OrderedDict([])
         logging.info('loading %d car models' % len(car_models.models))
         for model in car_models.models:
-            car_model = os.path.join(self.dataset_dir, 'car_models', model.name+'.pkl')
+            model_dir = "/".join(self.dataset_dir.split("/")[:-1])+'/train'
+            car_model = os.path.join(model_dir, 'car_models', model.name+'.pkl')
             # with open(car_model) as f:
             #     self.car_models[model.name] = pkl.load(f)
             #
@@ -112,8 +114,11 @@ class Car3D(torch.utils.data.Dataset):
             target = self._add_gt_annotations_Car3d(idx, image_shape)
 
         # We also change the size of image very iteration:
-        resize_size = np.random.randint(self.cfg['INPUT']['MIN_SIZE_TRAIN_RANGE'][0], self.cfg['INPUT']['MIN_SIZE_TRAIN_RANGE'][1])
-        self.transforms.transforms[0].min_size = resize_size
+        if self.training:
+            resize_size = np.random.randint(self.cfg['INPUT']['MIN_SIZE_TRAIN_RANGE'][0], self.cfg['INPUT']['MIN_SIZE_TRAIN_RANGE'][1])
+            self.transforms.transforms[0].min_size = resize_size
+        else:
+            self.transforms.transforms[0].min_size = self.cfg['INPUT']['MIN_SIZE_TEST']
 
         if self.transforms is not None:
             img, target = self.transforms(img, target)

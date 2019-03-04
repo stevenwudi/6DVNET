@@ -315,7 +315,7 @@ _C.TEST.EXPECTED_RESULTS_SIGMA_TOL = 4
 # This is global, so if we have 8 GPUs and IMS_PER_BATCH = 16, each GPU will
 # see 2 images per batch
 _C.TEST.IMS_PER_BATCH = 8
-
+_C.TEST.WRITE_TO_JSON = False
 
 # ---------------------------------------------------------------------------- #
 # Misc options

@@ -1,7 +1,7 @@
 MODEL:
   META_ARCHITECTURE: "GeneralizedRCNN"
-  #WEIGHT: "/media/SSD_1TB/ApolloScape/6DVNET_experiments/e2e_3d_car_101_FPN_triple_head/Feb21-04-19_n606_step/model_0010000.pth"
-  WEIGHT: "catalog://ImageNetPretrained/MSRA/R-101"
+  WEIGHT: "/media/SSD_1TB/ApolloScape/6DVNET_experiments/e2e_3d_car_101_FPN_triple_head/Feb27-03-40_n606_step/model_0010000.pth"
+  #WEIGHT: "catalog://ImageNetPretrained/MSRA/R-101"
   BACKBONE:
     CONV_BODY: "R-101-FPN"
     OUT_CHANNELS: 256
@@ -62,12 +62,13 @@ MODEL:
 
 DATASETS:
   TRAIN: ("Apollo_3d_car_train", "Apollo_3d_car_val")
-  TEST: ("Apollo_3d_car_test",)
+  TEST: ("Apollo_3d_car_val", "Apollo_3d_car_test",)
 
 INPUT:
   MIN_SIZE_TRAIN: 1200
-  MIN_SIZE_TRAIN_RANGE: (1200, 1600)  # (1200, 2710)  2710 is TOO BIG!
+  MIN_SIZE_TRAIN_RANGE: (1200, 1500)  # (1200, 2710)  2710 is TOO BIG!
   MAX_SIZE_TRAIN: 3384
+  MIN_SIZE_TEST: 2710
   MAX_SIZE_TEST : 3384
 
 DATALOADER:
@@ -78,6 +79,10 @@ SOLVER:
   STEPS: (5000, 8000)
   MAX_ITER: 10000
   #https://github.com/facebookresearch/Detectron/blob/master/configs/getting_started/tutorial_1gpu_e2e_faster_rcnn_R-50-FPN.yaml#L14-L30
-  IMS_PER_BATCH: 3
+  IMS_PER_BATCH: 1
   BASE_LR:   0.0025
   CHECKPOINT_PERIOD : 1000
+
+TEST:
+  WRITE_TO_JSON: True
+  IMS_PER_BATCH : 2

@@ -48,9 +48,10 @@ class ROIBoxHead(torch.nn.Module):
         # final classifier that converts the features into predictions
         class_logits, box_regression = self.predictor(x)
 
-        if not self.training and not self.cfg.MODEL.TRANS_HEAD_ON:
-            result, result_all = self.post_processor((class_logits, box_regression), proposals)
-            return x, result, {}
+        if not self.training:
+            result, result_all = self.post_processor((class_logits, box_regression), proposals, train=False)
+            # This is just a format keeping with double result
+            return x, result, result, {}
 
         loss_classifier, loss_box_reg = self.loss_evaluator([class_logits], [box_regression])
 

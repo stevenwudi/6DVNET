@@ -40,6 +40,8 @@ def build_dataset(cfg, dataset_list, transforms, dataset_catalog, is_train=True)
             args["remove_images_without_annotations"] = is_train
         if data["factory"] == "PascalVOCDataset":
             args["use_difficult"] = not is_train
+        if data["factory"] == "Car3D":
+            args["training"] = is_train
         args["transforms"] = transforms
         # make dataset from factory
         dataset = factory(**args)

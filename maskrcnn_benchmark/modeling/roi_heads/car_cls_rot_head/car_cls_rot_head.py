@@ -2,6 +2,7 @@ import torch
 from .roi_car_cls_rot_feature_extractors import make_roi_car_cls_rot_feature_extractor
 from .roi_car_cls_rot_predictor import make_roi_car_cls_rot_predictor
 from .loss import make_roi_car_cls_rot_evaluator
+from .inference import make_roi_car_cls_rot_post_processor
 from maskrcnn_benchmark.modeling.roi_heads.mask_head.mask_head import keep_only_positive_boxes
 
 
@@ -11,6 +12,7 @@ class ROICarClsRotHead(torch.nn.Module):
         self.cfg = cfg.clone()
         self.feature_extractor = make_roi_car_cls_rot_feature_extractor(cfg)
         self.predictor = make_roi_car_cls_rot_predictor(cfg)
+        self.post_processor = make_roi_car_cls_rot_post_processor(cfg)
         self.loss_evaluator = make_roi_car_cls_rot_evaluator(cfg)
 
     def forward(self, features, proposals, targets=None):
@@ -34,7 +36,8 @@ class ROICarClsRotHead(torch.nn.Module):
         cls_score, cls, rot_pred = self.predictor(x)
 
         if not self.training:
-            assert NotImplementedError
+            result = self.post_processor(dict(cls_score=cls_score, cls=cls, rot_pred=rot_pred), proposals)
+            return x, result, {}
 
         loss_type = self.cfg.MODEL.ROI_CAR_CLS_ROT_HEAD.ROT_LOSS
         ce_weight = self.cfg.MODEL.ROI_CAR_CLS_ROT_HEAD.CE_CAR_CLS_FINETUNE_WIGHT

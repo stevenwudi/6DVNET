@@ -25,9 +25,9 @@ class CombinedROIHeads(torch.nn.ModuleDict):
         losses = {}
         # TODO rename x to roi_box_features, if it doesn't increase memory consumption
         if not self.cfg.MODEL.TRANS_HEAD_ON:
-            x, detections, loss_box = self.box(features, proposals, targets)
+            x, detections_box, loss_box = self.box(features, proposals, targets)
         else:
-            x, det_result, detections, loss_box = self.box(features, proposals, targets)
+            x, detections, detections_box, loss_box = self.box(features, proposals, targets)
 
         losses.update(loss_box)
         if self.cfg.MODEL.MASK_ON:
@@ -43,13 +43,11 @@ class CombinedROIHeads(torch.nn.ModuleDict):
 
         if self.cfg.MODEL.CAR_CLS_HEAD_ON:
             car_cls_rot_features = features
-            if self.training and self.cfg.MODEL.ROI_CAR_CLS_ROT_HEAD.SHARE_BOX_FEATURE_EXTRACTOR:
-                mask_features = x
             x_car_cls_rot, detections, loss_car_cls = self.car_cls_rot(car_cls_rot_features, detections, targets)
             losses.update(loss_car_cls)
 
             if self.cfg.MODEL.TRANS_HEAD_ON:
-                trans_pred, loss_trans = self.trans(x_car_cls_rot, det_result, detections, targets)
+                detections, loss_trans = self.trans(x_car_cls_rot, detections, detections, targets)
                 losses.update(loss_trans)
 
         return x, detections, losses
