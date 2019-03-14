@@ -18,7 +18,7 @@ class KittiInstanceDataset(torch.utils.data.Dataset):
 
     """
 
-    def __init__(self, img_dir, ann_file=None, transforms=None):
+    def __init__(self, img_dir, ann_file=None, transforms=None, cfg=None):
         self.img_dir = img_dir
         self.ann_file = ann_file
         self.transforms = transforms

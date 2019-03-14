@@ -8,7 +8,7 @@ os.environ['CUDA_VISIBLE_DEVICES'] = '3'
 import torch
 from maskrcnn_benchmark.config import cfg
 from maskrcnn_benchmark.data import make_data_loader
-from maskrcnn_benchmark.engine.inference_car_3d import inference_car_3d
+from maskrcnn_benchmark.engine.inference import inference
 from maskrcnn_benchmark.modeling.detector import build_detection_model
 from maskrcnn_benchmark.utils.checkpoint import DetectronCheckpointer
 from maskrcnn_benchmark.utils.collect_env import collect_env_info
@@ -73,7 +73,7 @@ def main():
     data_loaders_val = make_data_loader(cfg, is_train=False, is_distributed=distributed)
 
     for output_folder, dataset_name, data_loader_val in zip(output_folders, dataset_names, data_loaders_val):
-        inference_car_3d(
+        inference(
             model,
             data_loader_val,
             dataset_name=dataset_name,
@@ -83,6 +83,7 @@ def main():
             expected_results=cfg.TEST.EXPECTED_RESULTS,
             expected_results_sigma_tol=cfg.TEST.EXPECTED_RESULTS_SIGMA_TOL,
             output_folder=output_folder,
+            cfg=cfg,
         )
         synchronize()
 

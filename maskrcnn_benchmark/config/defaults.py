@@ -316,6 +316,7 @@ _C.TEST.EXPECTED_RESULTS_SIGMA_TOL = 4
 # see 2 images per batch
 _C.TEST.IMS_PER_BATCH = 8
 _C.TEST.WRITE_TO_JSON = False
+_C.TEST.SCORE_THRESH_FOR_TRUTH_DETECTION = 0.1  # score for bbox detection and count as true positive
 
 # ---------------------------------------------------------------------------- #
 # Misc options

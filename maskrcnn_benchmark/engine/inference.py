@@ -59,6 +59,7 @@ def inference(
         expected_results=(),
         expected_results_sigma_tol=4,
         output_folder=None,
+        cfg=None,
 ):
     # convert to a torch.device for efficiency
     device = torch.device(device)
@@ -69,25 +70,28 @@ def inference(
     )
     logger = logging.getLogger("maskrcnn_benchmark.inference")
     dataset = data_loader.dataset
-    logger.info("Start evaluation on {} dataset({} images).".format(dataset_name, len(dataset)))
-    start_time = time.time()
-    predictions = compute_on_dataset(model, data_loader, device)
-    # wait for all processes to complete before measuring the time
-    synchronize()
-    total_time = time.time() - start_time
-    total_time_str = str(datetime.timedelta(seconds=total_time))
-    logger.info(
-        "Total inference time: {} ({} s / img per device, on {} devices)".format(
-            total_time_str, total_time * num_devices / len(dataset), num_devices
+
+    if os.path.isfile(os.path.join(output_folder, "predictions.pth")):
+        logger.info("Prediction file already exist, jump to evaluation.")
+        predictions = torch.load(os.path.join(output_folder, "predictions.pth"))
+    else:
+        logger.info("Start evaluation on {} dataset({} images).".format(dataset_name, len(dataset)))
+        start_time = time.time()
+        predictions = compute_on_dataset(model, data_loader, device)
+        # wait for all processes to complete before measuring the time
+        synchronize()
+        total_time = time.time() - start_time
+        total_time_str = str(datetime.timedelta(seconds=total_time))
+        logger.info(
+            "Total inference time: {} ({} s / img per device, on {} devices)".format(
+                total_time_str, total_time * num_devices / len(dataset), num_devices
+            )
         )
-    )
-
-    predictions = _accumulate_predictions_from_multiple_gpus(predictions)
-    if not is_main_process():
-        return
-
-    if output_folder:
-        torch.save(predictions, os.path.join(output_folder, "predictions.pth"))
+        predictions = _accumulate_predictions_from_multiple_gpus(predictions)
+        if not is_main_process():
+            return
+        if output_folder:
+            torch.save(predictions, os.path.join(output_folder, "predictions.pth"))
 
     extra_args = dict(
         box_only=box_only,
@@ -99,4 +103,5 @@ def inference(
     return evaluate(dataset=dataset,
                     predictions=predictions,
                     output_folder=output_folder,
+                    cfg=cfg,
                     **extra_args)
