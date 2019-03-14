@@ -22,6 +22,7 @@ from collections import namedtuple
 import matplotlib.pyplot as plt
 from matplotlib.patches import Polygon
 import pickle
+import copy
 
 Criterion = namedtuple('Criterion', [
     'shapeSim',  # Criterion for shape similarity
@@ -101,10 +102,12 @@ def do_3d_car_instance_evaluation(
     coco_eval.accumulate()
 
     # The following evaluate the mAP of car poses
-    args.test_dir = output_json_dir
-    args.gt_dir = args.dataset_dir + 'car_poses'
-    args.res_file = os.path.join(output_dir, 'json_'+args.list_flag+'_res.txt')
-    args.simType = None
+    args = {}
+    args['test_dir'] = output_json_dir
+    #args['test_dir'] = '/media/SSD_1TB/ApolloScape/ApolloScape_InstanceSeg/e2e_3d_car_101_FPN_triple_head_non_local_weighted/Nov03-21-05-13_N606-TITAN32_step/test/json_val_trans_iou_0.5_BBOX_AUG_multiple_scale_CAR_CLS_AUG_multiple_scale'
+    args['gt_dir'] = os.path.join(dataset.dataset_dir, 'car_poses')
+    args['res_file'] = os.path.join(output_folder, 'json_'+dataset.list_flag+'_res.txt')
+    args['simType'] = None
     det_3d_metric = Detect3DEval(args)
     det_3d_metric.evaluate()
     det_3d_metric.accumulate()
@@ -340,8 +343,8 @@ class Detect3DEval(object):
         Input:
             args: configeration object containing test folder and gt folder
         """
-        if not args.simType:
-            args.simType = '3dpose'
+        if not args['simType']:
+            args['simType'] = '3dpose'
             print('simType not specified. use default simType ')
 
         self.args = args
@@ -354,8 +357,8 @@ class Detect3DEval(object):
         self.sims = {}  # sims between all gts and dts
 
         #self.image_list = self._checker(args.test_dir, args.gt_dir)
-        self.image_list = self._checker_intersection(args.test_dir, args.gt_dir)
-        self.params = Params(simType=args.simType)
+        self.image_list = self._checker_intersection(args['test_dir'], args['gt_dir'])
+        self.params = Params(simType=args['simType'])
 
     def _checker(self, res_folder, gt_folder):
         """Check whether results folder contain same image number
@@ -387,8 +390,8 @@ class Detect3DEval(object):
         count_gt = 1
         count_dt = 1
         for image_name in self.image_list:
-            gt_file = '%s/%s' % (self.args.gt_dir, image_name)
-            dt_file = '%s/%s' % (self.args.test_dir, image_name)
+            gt_file = '%s/%s' % (self.args['gt_dir'], image_name)
+            dt_file = '%s/%s' % (self.args['test_dir'], image_name)
             car_poses_gt = json.load(open(gt_file, 'r'))
             car_poses_dt = json.load(open(dt_file, 'r'))
             for car_pose in car_poses_gt:
@@ -743,7 +746,7 @@ class Detect3DEval(object):
             raise Exception('no givem simType %s' % simType)
         self.stats, metric_names = summarize()
 
-        f = open(self.args.res_file, 'w')
+        f = open(self.args['res_file'], 'w')
         for name, value in zip(metric_names, self.stats):
             f.write('%s %.4f\n' % (name, value))
         f.close()
@@ -773,7 +776,7 @@ class Params(object):
         self.shapeThrs = np.linspace(.5, 0.95, np.round((0.95 - .5) / .05) + 1, endpoint=True)
         self.oriThrs = np.linspace(50, 5, np.round((50 - 5) / 5) + 1, endpoint=True)
         self.transThrs = np.linspace(2.8, 0.1, np.round((2.8 - 0.1) / .3) + 1, endpoint=True)
-        self.shape_sim_mat = np.loadtxt('./utilities/sim_mat.txt')
+        self.shape_sim_mat = np.loadtxt('../maskrcnn_benchmark/data/datasets/evaluation/apollo_3d_car_instace/sim_mat.txt')
 
         self.criterion_num = len(self.shapeThrs)
         self.simThrs = ['c' + str(i) for i in range(self.criterion_num)]
