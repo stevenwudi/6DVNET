@@ -34,12 +34,8 @@ Criterion = namedtuple('Criterion', [
 def do_3d_car_instance_evaluation(
     dataset,
     predictions,
-    box_only,
     output_folder,
     cfg,
-    iou_types,
-    expected_results,
-    expected_results_sigma_tol,
     vis=False
 ):
     # We first write prediction to the required submission json format

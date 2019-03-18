@@ -14,10 +14,6 @@ def car_3d_evaluation(
     return do_3d_car_instance_evaluation(
         dataset=dataset,
         predictions=predictions,
-        box_only=box_only,
         output_folder=output_folder,
         cfg=cfg,
-        iou_types=iou_types,
-        expected_results=expected_results,
-        expected_results_sigma_tol=expected_results_sigma_tol,
     )

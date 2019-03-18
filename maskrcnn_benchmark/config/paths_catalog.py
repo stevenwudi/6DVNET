@@ -17,6 +17,10 @@ class DatasetCatalog(object):
             "dataset_dir": "/media/SSD_1TB/ApolloScape/ECCV2018_apollo/test",
         },
 
+        "Pascal3d+_train": {"dataset_dir": "/media/SSD_1TB/PASCAL3D+_release1.1",},
+        "Pascal3d+_val": {"dataset_dir": "/media/SSD_1TB/PASCAL3D+_release1.1",},
+        "Pascal3d+_test": {"dataset_dir": "/media/SSD_1TB/PASCAL3D+_release1.1",},
+
         "kitti_instance_train": {
             "img_dir": "/media/SSD_1TB/Kitti/data_semantics/training/image_2",
             "ann_file": "/media/SSD_1TB/Kitti/data_semantics/training/instance"
@@ -175,6 +179,15 @@ class DatasetCatalog(object):
                 factory='Car3D',
                 args=args,
             )
+        elif "Pascal3d" in name:
+            attrs = DatasetCatalog.DATASETS[name]
+            args = dict(dataset_dir=attrs['dataset_dir'],
+                        list_flag=name.split('_')[-1])
+            return dict(
+                factory='Pascal3D',
+                args=args,
+            )
+
         raise RuntimeError("Dataset not available: {}".format(name))
 
 
