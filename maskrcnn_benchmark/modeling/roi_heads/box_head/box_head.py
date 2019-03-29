@@ -51,7 +51,10 @@ class ROIBoxHead(torch.nn.Module):
         if not self.training:
             result, result_all = self.post_processor((class_logits, box_regression), proposals, train=False)
             # This is just a format keeping with double result
-            return x, result, result, {}
+            if self.cfg.MODEL.TRANS_HEAD_ON:
+                return x, result, result, {}
+            else:
+                return x, result, {}
 
         loss_classifier, loss_box_reg = self.loss_evaluator([class_logits], [box_regression])
 

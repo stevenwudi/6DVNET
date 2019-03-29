@@ -47,6 +47,8 @@ _C.INPUT.MIN_SIZE_TRAIN = 800  # (800,)
 
 # Size of the smallest side of the image during training
 _C.INPUT.MIN_SIZE_TRAIN_RANGE = (1200, 2710)  # (800,)
+# Size of the smallest ratio side of the image during training
+_C.INPUT.MIN_SIZE_TRAIN_RATIO = (0.8, 1.2)  # (800,)
 # Maximum size of the side of the image during training
 _C.INPUT.MAX_SIZE_TRAIN = 1333
 # Size of the smallest side of the image during testing

@@ -4,6 +4,7 @@ from .coco import coco_evaluation
 from .voc import voc_evaluation
 from .kitti import kitti_evaluation
 from .apollo_3d_car_instace import car_3d_evaluation
+from .pascal3d import pascal3d_evaluation
 
 
 def evaluate(dataset, predictions, output_folder, cfg, **kwargs):
@@ -17,9 +18,7 @@ def evaluate(dataset, predictions, output_folder, cfg, **kwargs):
     Returns:
         evaluation result
     """
-    args = dict(
-        dataset=dataset, predictions=predictions, output_folder=output_folder, cfg=cfg, **kwargs
-    )
+    args = dict(dataset=dataset, predictions=predictions, output_folder=output_folder, cfg=cfg, **kwargs)
     if isinstance(dataset, datasets.COCODataset):
         return coco_evaluation(**args)
     elif isinstance(dataset, datasets.PascalVOCDataset):
@@ -28,6 +27,8 @@ def evaluate(dataset, predictions, output_folder, cfg, **kwargs):
         return kitti_evaluation(**args)
     elif isinstance(dataset, datasets.Car3D):
         return car_3d_evaluation(**args)
+    elif isinstance(dataset, datasets.Pascal3D):
+        return pascal3d_evaluation(**args)
 
     else:
         dataset_name = dataset.__class__.__name__
