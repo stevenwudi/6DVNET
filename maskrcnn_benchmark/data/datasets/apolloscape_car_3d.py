@@ -213,7 +213,6 @@ class Car3D(torch.utils.data.Dataset):
         target.add_field('car_cat_classes', car_cat_classes)
         target.add_field("masks", masks)
 
-
         quaternions = torch.tensor(quaternions)
         target.add_field("quaternions", quaternions)
         poses = torch.tensor(poses)

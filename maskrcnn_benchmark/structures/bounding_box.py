@@ -103,7 +103,7 @@ class BoxList(object):
             bbox = BoxList(scaled_box, size, mode=self.mode)
             # bbox._copy_extra_fields(self)
             for k, v in self.extra_fields.items():
-                if not isinstance(v, torch.Tensor):
+                if not isinstance(v, torch.Tensor) and k !='segms':
                     v = v.resize(size, *args, **kwargs)
                 bbox.add_field(k, v)
             return bbox
@@ -120,7 +120,7 @@ class BoxList(object):
         bbox = BoxList(scaled_box, size, mode="xyxy")
         # bbox._copy_extra_fields(self)
         for k, v in self.extra_fields.items():
-            if not isinstance(v, torch.Tensor):
+            if not isinstance(v, torch.Tensor) and k !='segms':
                 v = v.resize(size, *args, **kwargs)
             bbox.add_field(k, v)
 

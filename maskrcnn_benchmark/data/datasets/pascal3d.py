@@ -6,9 +6,12 @@ import pickle
 import mat4py
 import numpy as np
 import cv2
+from skimage import measure
 
 from maskrcnn_benchmark.structures.bounding_box import BoxList
+from maskrcnn_benchmark.structures.segmentation_mask import SegmentationMask
 from tqdm import tqdm
+from pycocotools import mask as maskUtils
 import copy
 import time
 from collections import defaultdict
@@ -20,7 +23,7 @@ def _isArrayLike(obj):
 
 
 class Pascal3D(torch.utils.data.Dataset):
-    def __init__(self, cfg, dataset_dir, list_flag, transforms, training, load_cad=False):
+    def __init__(self, cfg, dataset_dir, list_flag, transforms, training, load_cad=True):
         self.cfg = cfg.copy()
         self.dataset_dir = dataset_dir
         self.list_flag = list_flag
@@ -120,24 +123,27 @@ class Pascal3D(torch.utils.data.Dataset):
         boxes = []
         cad_classes = []
         masks = []
-        segms = []
+        segms = []  # This is only for test evaluation
         poses = []
         quaternions = []
         keypoints = []
 
         target = self.targets[idx]
 
-        # We suppose there is only one car (We will handle multiple cars later)
         image_shape = (target['record']['size']['width'], target['record']['size']['height'])
-
         if type(target['record']['objects']['cad_index']) == list:
             # there are multiple objects
-            for i in range(len(target['record']['objects']['cad_index'])):
+            for index in range(len(target['record']['objects']['cad_index'])):
                 # Originally it is matlab implemenation, index starts from 1...
-                cad_index = target['record']['objects']['cad_index'][i] - 1
-                bbox = target['record']['objects']['bbox'][i]
+                cad_index = target['record']['objects']['cad_index'][index] - 1
+                bbox = target['record']['objects']['bbox'][index]
                 boxes.append(bbox)
                 cad_classes.append(cad_index)
+                if self.cfg['MODEL']['MASK_ON']:
+                    # Originally it is matlab implemenation, index starts from 1...
+                    mask_instance, encoded_ground_truth = self.extract_mask_and_segms(target, image_shape, index)
+                    masks.append(mask_instance)
+                    segms.append(encoded_ground_truth)
 
             target_boxlist = BoxList(boxes, image_shape, mode="xyxy")
             cad_classes = torch.tensor(cad_classes)
@@ -145,6 +151,13 @@ class Pascal3D(torch.utils.data.Dataset):
             labels = np.ones(cad_classes.shape)
             labels = torch.tensor(labels)
             target_boxlist.add_field("labels", labels)
+
+            if self.cfg['MODEL']['MASK_ON']:
+                masks = SegmentationMask(masks, image_shape)
+                target_boxlist.add_field("masks", masks)
+                target_boxlist = target_boxlist.clip_to_image(remove_empty=True)
+                if not self.training:
+                    target_boxlist.add_field("segms", encoded_ground_truth)
         else:
             # Originally it is matlab implemenation, index starts from 1...
             cad_index = target['record']['objects']['cad_index'] - 1
@@ -160,7 +173,52 @@ class Pascal3D(torch.utils.data.Dataset):
             labels = torch.tensor(labels)
             target_boxlist.add_field("labels", labels)
 
+            if self.cfg['MODEL']['MASK_ON']:
+                # Originally it is matlab implemenation, index starts from 1...
+                mask_instance, encoded_ground_truth = self.extract_mask_and_segms(target, image_shape)
+                masks = SegmentationMask([mask_instance], image_shape)
+                target_boxlist.add_field("masks", masks)
+                target_boxlist = target_boxlist.clip_to_image(remove_empty=True)
+                if not self.training:
+                    target_boxlist.add_field("segms", [encoded_ground_truth])
+
         return target_boxlist
+
+    def extract_mask_and_segms(self, target, image_shape, index=None):
+        if index is not None:
+            cad_index = target['record']['objects']['cad_index'][index] - 1
+        else:
+            cad_index = target['record']['objects']['cad_index'] - 1
+
+        vertices = self.car_CAD['car']['vertices'][cad_index]
+        faces = np.array(self.car_CAD['car']['faces'][cad_index])
+
+        x3d = np.array(vertices)
+        x2d = self.project_3d(x3d, target, index)
+        mask = np.zeros(image_shape[::-1])
+        for face in faces - 1:
+            pts = np.array([[x2d[idx, 0], x2d[idx, 1]] for idx in face], np.int32)
+            pts = pts.reshape((-1, 1, 2))
+            cv2.polylines(mask, [pts], True, (0, 255, 0))
+            cv2.drawContours(mask, [pts], 0, (255, 255, 255), -1)
+
+        contours = measure.find_contours(np.array(mask), 0.5)
+        mask_instance = []
+        for contour in contours:
+            contour = np.flip(contour, axis=1)
+            segmentation = contour.ravel().tolist()
+            mask_instance.append(segmentation)
+
+        # Find mask
+        if not self.training:
+            ground_truth_binary_mask = np.zeros(mask.shape, dtype=np.uint8)
+            ground_truth_binary_mask[mask == 255] = 1
+            fortran_ground_truth_binary_mask = np.asfortranarray(ground_truth_binary_mask)
+            encoded_ground_truth = maskUtils.encode(fortran_ground_truth_binary_mask)
+        else:
+            encoded_ground_truth = []
+
+        return mask_instance, encoded_ground_truth
 
     def show_car_overlay(self, idx):
         # Show CAD overlay with and image, modify from the original .m file
@@ -168,7 +226,6 @@ class Pascal3D(torch.utils.data.Dataset):
         #img = Image.open(os.path.join(self.dataset_dir, 'Images', 'car_imagenet',  self.img_list_all[idx]+'.JPEG')).convert("RGB")
 
         img = cv2.imread(os.path.join(self.dataset_dir, 'Images', 'car_imagenet',  self.img_list_all[idx]+'.JPEG'), cv2.IMREAD_UNCHANGED)[:, :, ::-1]
-
         target = self.targets[idx]
 
         # load CAD model
@@ -209,14 +266,19 @@ class Pascal3D(torch.utils.data.Dataset):
         #     os.mkdir(save_set_dir)
         # fig.savefig(os.path.join(save_dir, settings, image_name + '.png'), dpi=1)
 
-    def project_3d(self, x3d, target):
-        a = target['record']['objects']['viewpoint']['azimuth'] * np.pi / 180
-        e = target['record']['objects']['viewpoint']['elevation'] * np.pi / 180
-        d = target['record']['objects']['viewpoint']['distance']
-        f = target['record']['objects']['viewpoint']['focal']
-        theta = target['record']['objects']['viewpoint']['theta'] * np.pi / 180
-        principle = [target['record']['objects']['viewpoint']['px'], target['record']['objects']['viewpoint']['py']]
-        viewport = target['record']['objects']['viewpoint']['viewport']
+    def project_3d(self, x3d, target, index):
+        if index is not None:
+            viewpoint = target['record']['objects']['viewpoint'][index]
+        else:
+            viewpoint = target['record']['objects']['viewpoint']
+
+        a = viewpoint['azimuth'] * np.pi / 180
+        e = viewpoint['elevation'] * np.pi / 180
+        d = viewpoint['distance']
+        f = viewpoint['focal']
+        theta = viewpoint['theta'] * np.pi / 180
+        principle = [viewpoint['px'], viewpoint['py']]
+        viewport = viewpoint['viewport']
 
         # camera centre
         C = np.zeros((3, 1))
