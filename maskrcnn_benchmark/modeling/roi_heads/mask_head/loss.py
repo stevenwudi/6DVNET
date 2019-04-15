@@ -38,6 +38,9 @@ def project_masks_on_boxes(segmentation_masks, proposals, discretization_size):
         cropped_mask = segmentation_mask.crop(proposal)
         scaled_mask = cropped_mask.resize((M, M))
         mask = scaled_mask.convert(mode="mask")
+        if not len(mask):
+            # this is a tiny hole, we ignore it
+            return torch.empty(0, dtype=torch.float32, device=device)
         masks.append(mask)
     if len(masks) == 0:
         return torch.empty(0, dtype=torch.float32, device=device)

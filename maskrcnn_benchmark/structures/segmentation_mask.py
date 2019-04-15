@@ -1,6 +1,6 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved.
 import torch
-
+import numpy as np
 import pycocotools.mask as mask_utils
 
 # transpose
@@ -125,14 +125,15 @@ class Polygons(object):
     def convert(self, mode):
         width, height = self.size
         if mode == "mask":
-            rles = mask_utils.frPyObjects(
-                [p.numpy() for p in self.polygons], height, width
-            )
-            rle = mask_utils.merge(rles)
-            mask = mask_utils.decode(rle)
-            mask = torch.from_numpy(mask)
-            # TODO add squeeze?
-            return mask
+            if len(self.polygons) > 1 or len(self.polygons[0]) > 4:
+                rles = mask_utils.frPyObjects([p.numpy() for p in self.polygons], height, width)
+                rle = mask_utils.merge(rles)
+                mask = mask_utils.decode(rle)
+                mask = torch.from_numpy(mask)
+                # TODO add squeeze?
+                return mask
+            else:
+                return []
 
     def __repr__(self):
         s = self.__class__.__name__ + "("

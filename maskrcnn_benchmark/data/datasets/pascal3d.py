@@ -7,7 +7,7 @@ import mat4py
 import numpy as np
 import cv2
 from skimage import measure
-
+from matplotlib import pyplot as plt
 from maskrcnn_benchmark.structures.bounding_box import BoxList
 from maskrcnn_benchmark.structures.segmentation_mask import SegmentationMask
 from tqdm import tqdm
@@ -197,11 +197,14 @@ class Pascal3D(torch.utils.data.Dataset):
         x2d = self.project_3d(x3d, target, index)
         mask = np.zeros(image_shape[::-1])
         for face in faces - 1:
-            pts = np.array([[x2d[idx, 0], x2d[idx, 1]] for idx in face], np.int32)
+            pts = np.array([[x2d[f, 0], x2d[f, 1]] for f in face], np.int32)
             pts = pts.reshape((-1, 1, 2))
-            cv2.polylines(mask, [pts], True, (0, 255, 0))
+            #cv2.polylines(mask, [pts], True, (0, 255, 0))
             cv2.drawContours(mask, [pts], 0, (255, 255, 255), -1)
 
+        # # fill some holes here
+        # kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (20, 20))
+        # mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
         contours = measure.find_contours(np.array(mask), 0.5)
         mask_instance = []
         for contour in contours:
@@ -239,7 +242,7 @@ class Pascal3D(torch.utils.data.Dataset):
         faces = np.array(self.car_CAD['car']['faces'][cad_index])
 
         x3d = np.array(vertices)
-        x2d = self.project_3d(x3d, target)
+        x2d = self.project_3d(x3d, target, idx)
 
         mask = np.zeros(img.shape)
         for face in faces-1:
@@ -260,7 +263,7 @@ class Pascal3D(torch.utils.data.Dataset):
         ax.set_axis_off()
         fig.add_axes(ax)
         ax.imshow(merged_image)
-
+        plt.show()
         # save_set_dir = os.path.join(save_dir, settings)
         # if not os.path.exists(save_set_dir):
         #     os.mkdir(save_set_dir)
