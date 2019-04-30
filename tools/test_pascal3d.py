@@ -4,7 +4,7 @@
 from maskrcnn_benchmark.utils.env import setup_environment  # noqa F401 isort:skip
 import argparse
 import os
-os.environ['CUDA_VISIBLE_DEVICES'] = '2'
+os.environ['CUDA_VISIBLE_DEVICES'] = '3'
 import torch
 from maskrcnn_benchmark.config import cfg
 from maskrcnn_benchmark.data import make_data_loader
@@ -19,15 +19,15 @@ from maskrcnn_benchmark.utils.miscellaneous import mkdir
 
 def parse_args():
     parser = argparse.ArgumentParser(description="PyTorch Object Detection Inference")
-    parser.add_argument("--config-file", default="../configs/pascal3d/e2e_3d_car_101_FPN_triple_head.yaml", metavar="FILE", help="path to config file", type=str)
+    parser.add_argument("--config-file", default="../configs/pascal3d/e2e_3d_car_101_FPN_box_mask_head.yaml", metavar="FILE", help="path to config file", type=str)
     parser.add_argument("--local_rank", type=int, default=0)
+    parser.add_argument("--model_weight", default="/media/SSD_1TB/PASCAL3D+_release1.1/6DVNET_experiments/e2e_3d_car_101_FPN_box_mask_head/Apr26-23-20_n606_step/model_0010000.pth")
     parser.add_argument("opts", help="Modify config options using the command-line", default=None, nargs=argparse.REMAINDER)
     return parser.parse_args()
 
 
 def main():
     args = parse_args()
-
     num_gpus = int(os.environ["WORLD_SIZE"]) if "WORLD_SIZE" in os.environ else 1
     distributed = num_gpus > 1
 
@@ -37,6 +37,7 @@ def main():
 
     cfg.merge_from_file(args.config_file)
     cfg.merge_from_list(args.opts)
+    cfg.merge_from_list([ "MODEL.WEIGHT", args.model_weight])
 
     output_dir = os.path.dirname(cfg.MODEL.WEIGHT)
     cfg.OUTPUT_DIR = output_dir

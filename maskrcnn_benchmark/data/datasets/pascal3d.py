@@ -16,6 +16,7 @@ import copy
 import time
 from collections import defaultdict
 import itertools
+from maskrcnn_benchmark.modeling.roi_heads.mask_head.inference import Masker
 
 
 def _isArrayLike(obj):
@@ -157,7 +158,7 @@ class Pascal3D(torch.utils.data.Dataset):
                 target_boxlist.add_field("masks", masks)
                 target_boxlist = target_boxlist.clip_to_image(remove_empty=True)
                 if not self.training:
-                    target_boxlist.add_field("segms", encoded_ground_truth)
+                    target_boxlist.add_field("segms", segms)
         else:
             # Originally it is matlab implemenation, index starts from 1...
             cad_index = target['record']['objects']['cad_index'] - 1
@@ -351,26 +352,18 @@ class Pascal3D(torch.utils.data.Dataset):
                     y_c = (y1 + y2)/2
                     ann['bbox'] = [x_c, y_c, w, h]
                     ann['area'] = w * h
+
+                    if target.has_field('segms'):
+                        ann['segms'] = target.get_field('segms')[id]
+                        # now only support compressed RLE format as segmentation results
+                        ann['area'] = maskUtils.area(ann['segms'])
+                        if not 'boxes' in ann:
+                            ann['boxes'] = maskUtils.toBbox(ann['segms'])
+
                     ann['id'] = count
                     ann['iscrowd'] = 0
                     count += 1
                     anns.append(ann)
-
-            elif type == 'segms':
-                raise NotImplementedError
-                # for id in range(len(target)):
-                #     ann = dict()
-                #     ann['image_id'] = self.img_list_all[idx]
-                #     ann['segms'] = target.get_field('segms')[id]
-                #     ann['category_id'] = int(target.get_field('labels')[id].numpy())
-                #     # now only support compressed RLE format as segmentation results
-                #     ann['area'] = maskUtils.area(ann['segms'])
-                #     if not 'boxes' in ann:
-                #         ann['boxes'] = maskUtils.toBbox(ann['segms'])
-                #     ann['id'] = count
-                #     count += 1
-                #     ann['iscrowd'] = 0
-                #     anns.append(ann)
 
         print('DONE (t={:0.2f}s)'.format(time.time() - tic))
 
@@ -392,51 +385,49 @@ class Pascal3D(torch.utils.data.Dataset):
         anns = []
         count = 1
         tic = time.time()
+        masker = Masker(threshold=0.5, padding=1)
 
         for idx in tqdm(range(len(self.img_list_all))):
             res.dataset['images'].append({'id': self.img_list_all[idx]})
             prediction = predictions[idx]
-            if type == 'boxes':
-                for id in range(len(prediction)):
-                    ann = dict()
-                    ann['image_id'] = self.img_list_all[idx]
-                    ann['category_id'] = int(prediction.get_field('labels')[id].cpu().numpy())
-                    bb = prediction.bbox[id].cpu().numpy()
-                    x1, x2, y1, y2 = bb[0], bb[2], bb[1], bb[3]
-                    w = x2 - x1
-                    h = y2 - y1
-                    x_c = (x1 + x2) / 2
-                    y_c = (y1 + y2) / 2
-                    ann['bbox'] = [x_c, y_c, w, h]
-                    ann['area'] = w * h
-                    ann['id'] = count
-                    ann['iscrowd'] = 0
-                    ann['score'] = prediction.get_field('scores')[id].cpu().numpy()
+            for id in range(len(prediction)):
+                ann = dict()
+                ann['image_id'] = self.img_list_all[idx]
+                ann['category_id'] = int(prediction.get_field('labels')[id].cpu().numpy())
+                bb = prediction.bbox[id].cpu().numpy()
+                x1, x2, y1, y2 = bb[0], bb[2], bb[1], bb[3]
+                w = x2 - x1
+                h = y2 - y1
+                x_c = (x1 + x2) / 2
+                y_c = (y1 + y2) / 2
+                ann['bbox'] = [x_c, y_c, w, h]
+                ann['area'] = w * h
+                ann['id'] = count
+                ann['iscrowd'] = 0
+                ann['score'] = prediction.get_field('scores')[id].cpu().numpy()
 
+                count += 1
+                anns.append(ann)
+
+                if prediction.has_field('mask'):
+                    image_width, image_height, _ = res.targets[ idx ][ 'record' ][ 'imgsize' ]
+
+                    masks = prediction.get_field('mask')
+                    # Masker is necessary only if masks haven't been already resized.
+                    if list(masks.shape[-2:]) != [image_height, image_width ]:
+                        masks = masker(masks.expand(1, -1, -1, -1, -1), prediction)
+                        masks = masks[0]
+
+                    ann['segms'] = [maskUtils.encode(np.array(mask[0, :, :, np.newaxis], order="F"))[0] for mask in masks]
+                    ann['category_id'] = int(prediction.get_field('labels')[id].cpu().numpy())
+                    # now only support compressed RLE format as segmentation results
+                    ann['area'] = maskUtils.area(ann['segms'])
+                    if not 'boxes' in ann:
+                        ann['boxes'] = maskUtils.toBbox(ann['segms'])
+                    ann['id'] = count
                     count += 1
+                    ann['iscrowd'] = 0
                     anns.append(ann)
-            elif type == 'segms':
-                raise NotImplementedError
-                #
-                # masks = prediction.get_field("mask")
-                # masks = self.masker([masks], [prediction])[0]
-                #
-                # for id in range(len(prediction)):
-                #     ann = dict()
-                #     ann['image_id'] = self.img_list_all[idx]
-                #     ann['score'] = prediction.get_field('scores')[id].numpy()
-                #     binary_mask = masks[id, 0]
-                #     fortran_binary_mask = np.asfortranarray(binary_mask)
-                #     ann['segms'] = maskUtils.encode(fortran_binary_mask)
-                #     ann['category_id'] = int(prediction.get_field('labels')[id].numpy())
-                #     # now only support compressed RLE format as segmentation results
-                #     ann['area'] = maskUtils.area(ann['segms'])
-                #     if not 'boxes' in ann:
-                #         ann['boxes'] = maskUtils.toBbox(ann['segms'])
-                #     ann['id'] = count
-                #     count += 1
-                #     ann['iscrowd'] = 0
-                #     anns.append(ann)
 
         print('DONE (t={:0.2f}s)'.format(time.time() - tic))
         res.dataset['annotations'] = anns

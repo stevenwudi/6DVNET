@@ -1,6 +1,7 @@
 import os
 from maskrcnn_benchmark.data.datasets.evaluation.apollo_3d_car_instace.wad_eval import WAD_eval
 import pickle
+import logging
 
 
 def do_pascal3d_evaluation(
@@ -10,13 +11,30 @@ def do_pascal3d_evaluation(
     cfg,
     vis=False
 ):
+    gt_file = '/'.join(output_folder.split('/')[:-3]) + '/gt_pascal.pickle'
+    logger = logging.getLogger("maskrcnn_benchmark.evaluate")
 
+    # if os.path.isfile(gt_file):
+    #     logger.info("GT file already exist, jump to evaluation.")
+    #     predictions = torch.load(os.path.join(output_folder, "predictions.pth"))
+    # else:
+    #     with open(gt_file, 'wb') as handle:
+    #         pickle.dump(coco_gt, handle, protocol=pickle.HIGHEST_PROTOCOL)
     # We First evaluate the box, segm and then evaluate the 3D metric
     # First boxes
-    eval_type = 'boxes'
     # Since reading GT need to retrieve from the hard disc, so we try to cache it.
-    coco_gt = dataset.loadGt(type=eval_type)
-    coco_dt = dataset.loadRes(predictions, type=eval_type)
+    if os.path.isfile(gt_file):
+        coco_gt = pickle.load(open(gt_file, "rb"))
+    else:
+        coco_gt = dataset.loadGt()
+        pickle.dump(coco_gt, open(gt_file, "wb"))
+
+    # Now we evaluate the segm
+    coco_dt = dataset.loadRes(predictions)
+
+    coco_eval = WAD_eval(coco_gt, coco_dt, 'segm')
+    coco_eval.evaluate()
+    coco_eval.accumulate()
 
     coco_eval = WAD_eval(coco_gt, coco_dt, 'bbox')
     coco_eval.evaluate()
@@ -43,21 +61,7 @@ def do_pascal3d_evaluation(
 
     # Now we evaluate the segm
     eval_type = 'segms'
-    gt_file = os.path.join(output_folder, 'val_gt_' + eval_type + '.pth')
-    # Since reading GT need to retrieve from the hard disc, so we try to cache it.
-    if os.path.isfile(gt_file):
-        coco_gt = pickle.load(open(gt_file, "rb"))
-    else:
-        coco_gt = dataset.loadGt(type=eval_type)
-        pickle.dump(coco_gt, open(gt_file, "wb"))
-
-    dt_file = os.path.join(output_folder, 'val_dt_' + eval_type + '.pth')
-    if os.path.isfile(gt_file):
-        coco_dt = pickle.load(open(dt_file, "rb"))
-    else:
-        coco_dt = dataset.loadRes(predictions, type=eval_type)
-        pickle.dump(coco_dt, open(dt_file, "wb"))
-
+    coco_dt = dataset.loadRes(predictions, type=eval_type)
     coco_eval = WAD_eval(coco_gt, coco_dt, 'segm')
     coco_eval.evaluate()
     coco_eval.accumulate()
