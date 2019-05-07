@@ -169,7 +169,10 @@ class WAD_eval:
 
         if p.iouType == 'segm':
             g = [g['segms'] for g in gt]
-            d = [d['segms'] for d in dt]
+            if type(dt[0]['segms']) == list:
+                d = [d['segms'][0] for d in dt]
+            else:
+                d = [d['segms'] for d in dt]
         elif p.iouType == 'bbox':
             g = [g['bbox'] for g in gt]
             d = [d['bbox'] for d in dt]

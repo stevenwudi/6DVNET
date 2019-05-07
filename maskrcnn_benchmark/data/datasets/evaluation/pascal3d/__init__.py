@@ -6,10 +6,6 @@ def pascal3d_evaluation(
     predictions,
     output_folder,
     cfg,
-    box_only,
-    iou_types,
-    expected_results,
-    expected_results_sigma_tol,
 ):
     return do_pascal3d_evaluation(
         dataset=dataset,

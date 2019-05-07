@@ -33,7 +33,6 @@ class Pascal3D(torch.utils.data.Dataset):
         self.training = training
 
         # Load ground truth here
-        print("Loading ground truth")
         target_file = os.path.join(self.dataset_dir, 'Annotations', 'car_imagenet_' + self.list_flag +'.pth')
         if os.path.isfile(target_file):
             with open(target_file, 'rb') as f:
@@ -321,7 +320,7 @@ class Pascal3D(torch.utils.data.Dataset):
 
         return x
 
-    def loadGt(self, type='boxes'):
+    def loadGt(self):
         """
         Load result file and return a result api object.
         :param: type      : boxes, or segms
@@ -339,7 +338,6 @@ class Pascal3D(torch.utils.data.Dataset):
             if self.list_flag in ['train', 'val']:
                 target = self._add_gt_annotations_Pascal3D(idx)
 
-            if type == 'boxes':
                 for id in range(len(target)):
                     ann = dict()
                     ann['image_id'] = self.img_list_all[idx]
@@ -371,7 +369,7 @@ class Pascal3D(torch.utils.data.Dataset):
         res.createIndex()
         return res
 
-    def loadRes(self, predictions, type='boxes'):
+    def loadRes(self, predictions):
         """
         Load result file and return a result api object.
         :param   resFile (str)     : file name of result file
@@ -402,32 +400,28 @@ class Pascal3D(torch.utils.data.Dataset):
                 y_c = (y1 + y2) / 2
                 ann['bbox'] = [x_c, y_c, w, h]
                 ann['area'] = w * h
-                ann['id'] = count
-                ann['iscrowd'] = 0
                 ann['score'] = prediction.get_field('scores')[id].cpu().numpy()
 
-                count += 1
-                anns.append(ann)
-
                 if prediction.has_field('mask'):
-                    image_width, image_height, _ = res.targets[ idx ][ 'record' ][ 'imgsize' ]
+                    image_width, image_height, _ = res.targets[idx]['record']['imgsize']
 
                     masks = prediction.get_field('mask')
                     # Masker is necessary only if masks haven't been already resized.
-                    if list(masks.shape[-2:]) != [image_height, image_width ]:
+                    if list(masks.shape[-2:]) != [image_height, image_width]:
                         masks = masker(masks.expand(1, -1, -1, -1, -1), prediction)
                         masks = masks[0]
 
                     ann['segms'] = [maskUtils.encode(np.array(mask[0, :, :, np.newaxis], order="F"))[0] for mask in masks]
                     ann['category_id'] = int(prediction.get_field('labels')[id].cpu().numpy())
                     # now only support compressed RLE format as segmentation results
-                    ann['area'] = maskUtils.area(ann['segms'])
+                    #ann['area'] = maskUtils.area(ann['segms'])
                     if not 'boxes' in ann:
                         ann['boxes'] = maskUtils.toBbox(ann['segms'])
-                    ann['id'] = count
-                    count += 1
-                    ann['iscrowd'] = 0
-                    anns.append(ann)
+
+                ann['id'] = count
+                count += 1
+                ann['iscrowd'] = 0
+                anns.append(ann)
 
         print('DONE (t={:0.2f}s)'.format(time.time() - tic))
         res.dataset['annotations'] = anns
