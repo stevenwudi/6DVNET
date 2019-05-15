@@ -124,9 +124,10 @@ class Pascal3D(torch.utils.data.Dataset):
         cad_classes = []
         masks = []
         segms = []  # This is only for test evaluation
-        poses = []
-        quaternions = []
-        keypoints = []
+        azimuths = []
+        elevations = []
+        distances = []
+        rot_vects = []
 
         target = self.targets[idx]
 
@@ -139,6 +140,16 @@ class Pascal3D(torch.utils.data.Dataset):
                 bbox = target['record']['objects']['bbox'][index]
                 boxes.append(bbox)
                 cad_classes.append(cad_index)
+
+                if self.cfg['MODEL']['CAR_CLS_HEAD_ON']:
+                    azimuth = target['record']['objects']['viewpoint'][index]['azimuth']
+                    elevation = target['record']['objects']['viewpoint'][index]['elevation']
+                    distance = target['record']['objects']['viewpoint'][index]['distance']
+                    azimuths.append(azimuth/360.)
+                    elevations.append(elevation/360.)
+                    rot_vects.append([azimuth/360., elevation/360.])
+                    distances.append(distance)
+
                 if self.cfg['MODEL']['MASK_ON']:
                     # Originally it is matlab implemenation, index starts from 1...
                     mask_instance, encoded_ground_truth = self.extract_mask_and_segms(target, image_shape, index)
@@ -151,13 +162,19 @@ class Pascal3D(torch.utils.data.Dataset):
             labels = np.ones(cad_classes.shape)
             labels = torch.tensor(labels)
             target_boxlist.add_field("labels", labels)
-
             if self.cfg['MODEL']['MASK_ON']:
                 masks = SegmentationMask(masks, image_shape)
                 target_boxlist.add_field("masks", masks)
                 target_boxlist = target_boxlist.clip_to_image(remove_empty=True)
                 if not self.training:
                     target_boxlist.add_field("segms", segms)
+            if self.cfg['MODEL']['CAR_CLS_HEAD_ON']:
+                target_boxlist.add_field("azimuth", torch.tensor(azimuths))
+                target_boxlist.add_field("elevation", torch.tensor(elevations))
+                target_boxlist.add_field("rot_vects", torch.tensor(rot_vects))
+
+                target_boxlist.add_field("distance", torch.tensor(distances))
+
         else:
             # Originally it is matlab implemenation, index starts from 1...
             cad_index = target['record']['objects']['cad_index'] - 1
@@ -172,7 +189,6 @@ class Pascal3D(torch.utils.data.Dataset):
             labels = np.ones(cad_classes.shape)
             labels = torch.tensor(labels)
             target_boxlist.add_field("labels", labels)
-
             if self.cfg['MODEL']['MASK_ON']:
                 # Originally it is matlab implemenation, index starts from 1...
                 mask_instance, encoded_ground_truth = self.extract_mask_and_segms(target, image_shape)
@@ -181,6 +197,24 @@ class Pascal3D(torch.utils.data.Dataset):
                 target_boxlist = target_boxlist.clip_to_image(remove_empty=True)
                 if not self.training:
                     target_boxlist.add_field("segms", [encoded_ground_truth])
+            if self.cfg['MODEL']['CAR_CLS_HEAD_ON']:
+                azimuth = target['record']['objects']['viewpoint']['azimuth']
+                elevation = target['record']['objects']['viewpoint']['elevation']
+                azimuths.append(azimuth/360.)
+                elevations.append(elevation/360.)
+                rot_vects.append([azimuth/360., elevation / 360.])
+
+                distances.append(target['record']['objects']['viewpoint']['distance'])
+
+                target_boxlist.add_field("azimuth", torch.tensor(azimuths))
+                target_boxlist.add_field("elevation", torch.tensor(elevations))
+                target_boxlist.add_field("rot_vects", torch.tensor(rot_vects))
+
+                target_boxlist.add_field("distance", torch.tensor(distances))
+
+        labels = np.ones(cad_classes.shape)
+        labels = torch.tensor(labels)
+        target_boxlist.add_field("labels", labels)
 
         return target_boxlist
 

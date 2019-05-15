@@ -20,7 +20,7 @@ class CarClsRotLoss(object):
         match_quality_matrix = boxlist_iou(target, proposal)
         matched_idxs = self.proposal_matcher(match_quality_matrix)
         # Mask RCNN needs "labels" and "masks "fields for creating the targets
-        target = target.copy_with_fields(["labels", "car_cat_classes", "quaternions"])
+        target = target.copy_with_fields(self.cfg['MODEL']['ROI_CAR_CLS_ROT_HEAD']['REGRESS_TARGET'])
         # get the targets corresponding GT for each proposal
         # NB: need to clamp the indices because we can have a single
         # GT in the image, and matched_idxs can be -2, which goes
@@ -49,10 +49,10 @@ class CarClsRotLoss(object):
             # mask scores are only computed on positive samples
             positive_inds = torch.nonzero(labels_per_image > 0).squeeze(1)
 
-            quaternion = matched_targets.get_field("quaternions")
+            quaternion = matched_targets.get_field(self.cfg.MODEL.ROI_CAR_CLS_ROT_HEAD.ROT_NAME)
             quaternion = quaternion[positive_inds]
 
-            car_cat_classe = matched_targets.get_field("car_cat_classes")
+            car_cat_classe = matched_targets.get_field(self.cfg.MODEL.ROI_CAR_CLS_ROT_HEAD.SUBCLASS_NAME)
             car_cat_classe = car_cat_classe[positive_inds]
 
             labels.append(labels_per_image)

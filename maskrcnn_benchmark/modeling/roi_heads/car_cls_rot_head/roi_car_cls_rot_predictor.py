@@ -8,9 +8,10 @@ class FPNPredictor(nn.Module):
 
         representation_size = cfg.MODEL.ROI_CAR_CLS_ROT_HEAD.MLP_HEAD_DIM
         num_car_classes = cfg.MODEL.ROI_CAR_CLS_ROT_HEAD.NUMBER_CARS
+        num_rot = cfg.MODEL.ROI_CAR_CLS_ROT_HEAD.NUMBER_ROTS
 
         self.cls_score = nn.Linear(representation_size, num_car_classes)
-        self.rot_pred = nn.Linear(representation_size, 4)
+        self.rot_pred = nn.Linear(representation_size, num_rot)
 
         nn.init.normal_(self.cls_score.weight, std=0.01)
         nn.init.normal_(self.rot_pred.weight, std=0.1)

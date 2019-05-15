@@ -12,7 +12,7 @@ import argparse
 import os
 import matplotlib
 matplotlib.use("TkAgg")
-os.environ['CUDA_VISIBLE_DEVICES'] = '3'
+os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
 import torch
 from maskrcnn_benchmark.config import cfg
@@ -32,7 +32,7 @@ def parse_args():
     """Parse input arguments"""
 
     parser = argparse.ArgumentParser(description="PyTorch Object Detection Training")
-    parser.add_argument("--config-file", default="../configs/pascal3d/e2e_3d_car_101_FPN_triple_head.yaml", metavar="FILE", help="path to config file", type=str)
+    parser.add_argument("--config-file", default="../configs/pascal3d/e2e_3d_car_101_FPN_box_mask_rot_head.yaml", metavar="FILE", help="path to config file", type=str)
     parser.add_argument("--local_rank", type=int, default=0)
     parser.add_argument("--skip-test", default=False, dest="skip_test", help="Do not test the final model")
 
