@@ -48,7 +48,7 @@ class ROITransHead(torch.nn.Module):
         pred_boxes = torch.zeros(concat_boxes.shape, dtype=concat_boxes.dtype, device=device)
 
         # x_c
-        pred_boxes[:, 0::4] = (concat_boxes[:, 0::4] + concat_boxes[:, 0::4])/2
+        pred_boxes[:, 0::4] = (concat_boxes[:, 0::4] + concat_boxes[:, 2::4])/2
         # y_c
         pred_boxes[:, 1::4] = (concat_boxes[:, 1::4] + concat_boxes[:, 3::4])/2
         # w (note: "- 1" is correct; don't be fooled by the asymmetry)
