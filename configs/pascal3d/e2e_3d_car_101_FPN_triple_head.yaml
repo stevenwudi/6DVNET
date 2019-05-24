@@ -1,7 +1,7 @@
 MODEL:
   META_ARCHITECTURE: "GeneralizedRCNN"
-  WEIGHT: "/media/SSD_1TB/PASCAL3D+_release1.1/6DVNET_experiments/e2e_3d_car_101_FPN_triple_head/Mar20-00-11_n606_step/model_0092000.pth"
-  #WEIGHT: "catalog://ImageNetPretrained/MSRA/R-101"
+  #WEIGHT: "/media/SSD_1TB/PASCAL3D+_release1.1/6DVNET_experiments/e2e_3d_car_101_FPN_box_mask_rot_head/May15-00-07_n606_step/model_0015000.pth"
+  WEIGHT: "catalog://ImageNetPretrained/MSRA/R-101"
   BACKBONE:
     CONV_BODY: "R-101-FPN"
     OUT_CHANNELS: 256
@@ -21,6 +21,7 @@ MODEL:
     POOLER_SAMPLING_RATIO: 2
     FEATURE_EXTRACTOR: "FPN2MLPFeatureExtractor"
     PREDICTOR: "FPNPredictor"
+
   ROI_MASK_HEAD:
     POOLER_SCALES: (0.25, 0.125, 0.0625, 0.03125)
     FEATURE_EXTRACTOR: "MaskRCNNFPNFeatureExtractor"
@@ -29,6 +30,7 @@ MODEL:
     POOLER_SAMPLING_RATIO: 2
     RESOLUTION: 28
     SHARE_BOX_FEATURE_EXTRACTOR: False
+    MASK_LOSS_BETA: 0.1
 
   ROI_CAR_CLS_ROT_HEAD:
     FEATURE_EXTRACTOR: "FPN2MLP2FeatureExtractor"
@@ -37,10 +39,14 @@ MODEL:
     POOLER_SAMPLING_RATIO: 2
     MLP_HEAD_DIM: 1024
     PREDICTOR: "FPNPredictor"
-    NUMBER_CARS: 34
+    NUMBER_CARS: 10
+    NUMBER_ROTS: 2
     SHARE_BOX_FEATURE_EXTRACTOR: False
     ROT_LOSS: "L1"
     QUATERNION_HEMISPHERE: True
+    REGRESS_TARGET: ['rot_vects', 'cad_classes', 'labels']
+    ROT_NAME: 'rot_vects'
+    SUBCLASS_NAME: 'cad_classes'
 
   TRANS_HEAD:
     FEATURE_EXTRACTOR: "MLPFeatureExtractor"
@@ -54,8 +60,8 @@ MODEL:
     TRANS_LOSS_BETA: 0.05
 
   MASK_ON: True
-  CAR_CLS_HEAD_ON: False
-  TRANS_HEAD_ON: False
+  CAR_CLS_HEAD_ON: True
+  TRANS_HEAD_ON: True
 
 DATASETS:
   TRAIN: ("Pascal3d+_train",)
@@ -77,8 +83,8 @@ SOLVER:
   MAX_ITER: 100000
   #https://github.com/facebookresearch/Detectron/blob/master/configs/getting_started/tutorial_1gpu_e2e_faster_rcnn_R-50-FPN.yaml#L14-L30
   IMS_PER_BATCH: 1
-  BASE_LR:   0.01
-  CHECKPOINT_PERIOD : 10000
+  BASE_LR:   0.001
+  CHECKPOINT_PERIOD : 5000
 
 TEST:
   WRITE_TO_JSON: True

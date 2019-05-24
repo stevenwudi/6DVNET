@@ -12,7 +12,7 @@ import argparse
 import os
 import matplotlib
 matplotlib.use("TkAgg")
-os.environ['CUDA_VISIBLE_DEVICES'] = '2'
+os.environ['CUDA_VISIBLE_DEVICES'] = '1, 2, 3'
 
 import torch
 from maskrcnn_benchmark.config import cfg
@@ -148,7 +148,7 @@ def main():
         logger.info(config_str)
     logger.info("Running with config:\n{}".format(cfg))
 
-    model = train(
+    train(
         cfg=cfg,
         local_rank=args.local_rank,
         distributed=args.distributed,

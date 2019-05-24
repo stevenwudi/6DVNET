@@ -20,6 +20,7 @@ from maskrcnn_benchmark.utils.miscellaneous import mkdir
 def parse_args():
     parser = argparse.ArgumentParser(description="PyTorch Object Detection Inference")
     parser.add_argument("--config-file", default="../configs/e2e_3d_car_101_FPN_triple_head.yaml", metavar="FILE", help="path to config file", type=str)
+    parser.add_argument("--weight", default="/media/SSD_1TB/ApolloScape/6DVNET_experiments/e2e_3d_car_101_FPN_triple_head/May20-23-04_n606_step/model_final.pth")
     parser.add_argument("--local_rank", type=int, default=0)
     parser.add_argument("opts", help="Modify config options using the command-line", default=None, nargs=argparse.REMAINDER)
     return parser.parse_args()
@@ -37,6 +38,7 @@ def main():
 
     cfg.merge_from_file(args.config_file)
     cfg.merge_from_list(args.opts)
+    cfg.merge_from_list(["MODEL.WEIGHT", args.weight])
 
     output_dir = os.path.dirname(cfg.MODEL.WEIGHT)
     cfg.OUTPUT_DIR = output_dir

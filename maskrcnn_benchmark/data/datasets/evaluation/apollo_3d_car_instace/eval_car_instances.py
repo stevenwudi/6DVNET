@@ -75,6 +75,26 @@ def do_3d_car_instance_evaluation(
     coco_eval.evaluate()
     coco_eval.accumulate()
     coco_eval.summarize()
+    """
+     /media/SSD_1TB/ApolloScape/6DVNET_experiments/e2e_3d_car_101_FPN_triple_head/May20-23-04_n606_step/model_final.pth
+     Average Precision  (AP) @[ IoU=0.50:0.95 | area=all                  | maxDets=100 ] = 0.568
+     Average Precision  (AP) @[ IoU=0.50      | area=all                  | maxDets=100 ] = 0.884
+     Average Precision  (AP) @[ IoU=0.75      | area=all                  | maxDets=100 ] = 0.637
+     Average Precision  (AP) @[ IoU=0.50:0.95 | area=extra-small (0-14)   | maxDets=100 ] = -1.000 | (numGT, numDt) =     0     1
+     Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium(28-56)        | maxDets=100 ] = 0.366 | (numGT, numDt) =   386  1880
+     Average Precision  (AP) @[ IoU=0.50:0.95 | area=large(56-112)        | maxDets=100 ] = 0.508 | (numGT, numDt) =   886  1973
+     Average Precision  (AP) @[ IoU=0.50:0.95 | area=extra-large(112-512) | maxDets=100 ] = 0.642 | (numGT, numDt) =  1255  1766
+     Average Precision  (AP) @[ IoU=0.50:0.95 | area=uber-large(512 !!!!) | maxDets=100 ] = 0.706 | (numGT, numDt) =    97   135
+     Average Recall     (AR) @[ IoU=0.50:0.95 | area=all                  | maxDets=  1 ] = 0.065
+     Average Recall     (AR) @[ IoU=0.50:0.95 | area=all                  | maxDets= 10 ] = 0.480
+     Average Recall     (AR) @[ IoU=0.50:0.95 | area=all                  | maxDets=100 ] = 0.638
+     Average Recall     (AR) @[ IoU=0.50:0.95 | area=extra-small (0-14)   | maxDets=100 ] = -1.000 | (numGT, numDt) =     0     1
+     Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium(28-56)        | maxDets=100 ] = 0.547 | (numGT, numDt) =   386  1880
+     Average Recall     (AR) @[ IoU=0.50:0.95 | area=large(56-112)        | maxDets=100 ] = 0.598 | (numGT, numDt) =   886  1973
+     Average Recall     (AR) @[ IoU=0.50:0.95 | area=extra-large(112-512) | maxDets=100 ] = 0.690 | (numGT, numDt) =  1255  1766
+     Average Recall     (AR) @[ IoU=0.50:0.95 | area=uber-large(512 !!!!) | maxDets=100 ] = 0.757 | (numGT, numDt) =    97   135
+
+    """
 
     # Now we evaluate the segm
     eval_type = 'segms'
@@ -87,7 +107,7 @@ def do_3d_car_instance_evaluation(
         pickle.dump(coco_gt, open(gt_file, "wb"))
 
     dt_file = os.path.join(output_folder, 'val_dt_' + eval_type + '.pth')
-    if os.path.isfile(gt_file):
+    if os.path.isfile(dt_file):
         coco_dt = pickle.load(open(dt_file, "rb"))
     else:
         coco_dt = dataset.loadRes(predictions, type=eval_type)
@@ -96,6 +116,26 @@ def do_3d_car_instance_evaluation(
     coco_eval = WAD_eval(coco_gt, coco_dt, 'segm')
     coco_eval.evaluate()
     coco_eval.accumulate()
+    """    
+     /media/SSD_1TB/ApolloScape/6DVNET_experiments/e2e_3d_car_101_FPN_triple_head/May20-23-04_n606_step/model_final.pth    
+     Average Precision  (AP) @[ IoU=0.50:0.95 | area=all                  | maxDets=100 ] = 0.578
+     Average Precision  (AP) @[ IoU=0.50      | area=all                  | maxDets=100 ] = 0.898
+     Average Precision  (AP) @[ IoU=0.75      | area=all                  | maxDets=100 ] = 0.645
+     Average Precision  (AP) @[ IoU=0.50:0.95 | area=extra-small (0-14)   | maxDets=100 ] = -1.000 | (numGT, numDt) =     0     7
+     Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium(28-56)        | maxDets=100 ] = 0.392 | (numGT, numDt) =   497  2203
+     Average Precision  (AP) @[ IoU=0.50:0.95 | area=large(56-112)        | maxDets=100 ] = 0.539 | (numGT, numDt) =   959  1759
+     Average Precision  (AP) @[ IoU=0.50:0.95 | area=extra-large(112-512) | maxDets=100 ] = 0.673 | (numGT, numDt) =  1083  1448
+     Average Precision  (AP) @[ IoU=0.50:0.95 | area=uber-large(512 !!!!) | maxDets=100 ] = 0.659 | (numGT, numDt) =    60    67
+     Average Recall     (AR) @[ IoU=0.50:0.95 | area=all                  | maxDets=  1 ] = 0.065
+     Average Recall     (AR) @[ IoU=0.50:0.95 | area=all                  | maxDets= 10 ] = 0.476
+     Average Recall     (AR) @[ IoU=0.50:0.95 | area=all                  | maxDets=100 ] = 0.633
+     Average Recall     (AR) @[ IoU=0.50:0.95 | area=extra-small (0-14)   | maxDets=100 ] = -1.000 | (numGT, numDt) =     0     7
+     Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium(28-56)        | maxDets=100 ] = 0.542 | (numGT, numDt) =   497  2203
+     Average Recall     (AR) @[ IoU=0.50:0.95 | area=large(56-112)        | maxDets=100 ] = 0.607 | (numGT, numDt) =   959  1759
+     Average Recall     (AR) @[ IoU=0.50:0.95 | area=extra-large(112-512) | maxDets=100 ] = 0.701 | (numGT, numDt) =  1083  1448
+     Average Recall     (AR) @[ IoU=0.50:0.95 | area=uber-large(512 !!!!) | maxDets=100 ] = 0.683 | (numGT, numDt) =    60    67
+
+    """
 
     # The following evaluate the mAP of car poses
     args = {}
@@ -108,6 +148,23 @@ def do_3d_car_instance_evaluation(
     det_3d_metric.evaluate()
     det_3d_metric.accumulate()
     det_3d_metric.summarize()
+    """
+     /media/SSD_1TB/ApolloScape/6DVNET_experiments/e2e_3d_car_101_FPN_triple_head/May20-23-04_n606_step/model_final.pth    
+     Wrong result! for rot and trans
+     Average Precision  (AP) @[ Criteria=c0:c5     | area=   all | maxDets=100 ] = 0.01250
+     Average Precision  (AP) @[ Criteria=c0        | area=   all | maxDets=100 ] = 0.05051
+     Average Precision  (AP) @[ Criteria=c3        | area=   all | maxDets=100 ] = 0.01009
+     Average Precision  (AP) @[ Criteria=c0:c5     | area= small | maxDets=100 ] = 0.00208
+     Average Precision  (AP) @[ Criteria=c0:c5     | area=medium | maxDets=100 ] = 0.01053
+     Average Precision  (AP) @[ Criteria=c0:c5     | area= large | maxDets=100 ] = 0.03793
+     Average Recall     (AR) @[ Criteria=c0:c5     | area=   all | maxDets=  1 ] = 0.00256
+     Average Recall     (AR) @[ Criteria=c0:c5     | area=   all | maxDets= 10 ] = 0.04917
+     Average Recall     (AR) @[ Criteria=c0:c5     | area=   all | maxDets=100 ] = 0.07575
+     Average Recall     (AR) @[ Criteria=c0:c5     | area= small | maxDets=100 ] = 0.02842
+     Average Recall     (AR) @[ Criteria=c0:c5     | area=medium | maxDets=100 ] = 0.07717
+     Average Recall     (AR) @[ Criteria=c0:c5     | area= large | maxDets=100 ] = 0.16835
+
+    """
 
 
 def write_pose_to_json(dataset, predictions, output_dir, thresh, iou_ignore_threshold=True):
@@ -121,9 +178,9 @@ def write_pose_to_json(dataset, predictions, output_dir, thresh, iou_ignore_thre
         car_cls = prediction.get_field('cls')
         bbox_score = prediction.get_field('scores')
         masks = prediction.get_field('mask')
-        trans_pred = prediction.get_field('trans_pred').numpy()
+        trans_pred = prediction.get_field('trans_pred').cpu().numpy()
 
-        quaternions = prediction.get_field('rot_pred').numpy()
+        quaternions = prediction.get_field('rot_pred').cpu().numpy()
         # The following two lines are not necessary if our network output already normalises the output
         norm = np.linalg.norm(quaternions, axis=1)
         rot_pred_norm = quaternions / norm[:, None]
@@ -135,6 +192,7 @@ def write_pose_to_json(dataset, predictions, output_dir, thresh, iou_ignore_thre
 
         # From largest to smallest order
         areas = (boxes[:, 2] - boxes[:, 0]) * (boxes[:, 3] - boxes[:, 1])
+        areas = areas.cpu()
         sorted_inds = np.argsort(-areas)
 
         car_list = []

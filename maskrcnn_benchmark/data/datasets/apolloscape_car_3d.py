@@ -14,7 +14,7 @@ from maskrcnn_benchmark.utils.geometry import euler_angles_to_rotation_matrix, e
 from maskrcnn_benchmark.structures.segmentation_mask import SegmentationMask
 from tools.ApolloScape_car_instance.utils.utils import quaternion_upper_hemispher
 from maskrcnn_benchmark.modeling.roi_heads.mask_head.inference import Masker
-
+from matplotlib import pyplot as plt
 
 import time
 import copy
@@ -128,6 +128,10 @@ class Car3D(torch.utils.data.Dataset):
 
         img = Image.open(os.path.join(self.dataset_dir, 'images', self.img_list_all[idx]+'.jpg')).convert("RGB")
         image_shape = img.size
+        if self.cfg['INPUT']['BOTTOM_HALF']:
+            # crop the PIL image
+            area = (0, int(image_shape[1]/2), image_shape[0], int(image_shape[1]))
+            img = img.crop(area)
 
         if self.list_flag in ['train', 'val']:
             target = self._add_gt_annotations_Car3d(idx, image_shape)
@@ -181,10 +185,12 @@ class Car3D(torch.utils.data.Dataset):
             # Find mask
             ground_truth_binary_mask = np.zeros(mask.shape, dtype=np.uint8)
             ground_truth_binary_mask[mask == 255] = 1
+            if self.cfg['INPUT']['BOTTOM_HALF']:
+                ground_truth_binary_mask = ground_truth_binary_mask[int(mask.shape[0]/2):, :]
             fortran_ground_truth_binary_mask = np.asfortranarray(ground_truth_binary_mask)
             encoded_ground_truth = maskUtils.encode(fortran_ground_truth_binary_mask)
 
-            contours = measure.find_contours(np.array(mask), 0.5)
+            contours = measure.find_contours(np.array(ground_truth_binary_mask), 0.5)
             mask_instance = []
             # if len(contours) > 1:
             #     print("Image with problem: %d, %s" % (idx, self.img_list_all[idx]))
@@ -197,6 +203,9 @@ class Car3D(torch.utils.data.Dataset):
             segms.append(encoded_ground_truth)
             #cv2.imwrite(os.path.join('/media/SSD_1TB/ApolloScape', self.img_list_all[idx] + '_' + str(i) + '_.jpg'), mask)
             x1, y1, x2, y2 = imgpts[:, 0].min(), imgpts[:, 1].min(), imgpts[:, 0].max(), imgpts[:, 1].max()
+            if self.cfg['INPUT']['BOTTOM_HALF']:
+                y1 -= int(image_shape[1]/2)
+                y2 -= int(image_shape[1]/2)
             boxes.append([x1, y1, x2, y2])
 
             q = euler_angles_to_quaternions(np.array(car_pose['pose'][:3]))[0]
@@ -206,8 +215,12 @@ class Car3D(torch.utils.data.Dataset):
             car_cat_classes.append(np.where(self.unique_car_models == car_pose['car_id'])[0][0])
             poses.append(car_pose['pose'])
 
-        target = BoxList(boxes, image_shape, mode="xyxy")
-        masks = SegmentationMask(masks, image_shape)
+        if self.cfg['INPUT']['BOTTOM_HALF']:
+            target = BoxList(boxes, (image_shape[0], int(image_shape[1]/2)), mode="xyxy")
+            masks = SegmentationMask(masks, (image_shape[0], int(image_shape[1]/2)))
+        else:
+            target = BoxList(boxes, image_shape, mode="xyxy")
+            masks = SegmentationMask(masks, image_shape)
 
         car_cat_classes = torch.tensor(car_cat_classes)
         target.add_field('car_cat_classes', car_cat_classes)
@@ -224,7 +237,8 @@ class Car3D(torch.utils.data.Dataset):
 
         target = target.clip_to_image(remove_empty=True)
         # for evaluation purpose
-        target.add_field("segms", segms)
+        if not self.training:
+            target.add_field("segms", segms)
         return target
 
     def loadGt(self, type='boxes'):

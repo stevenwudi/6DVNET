@@ -61,7 +61,8 @@ _C.INPUT.PIXEL_MEAN = [102.9801, 115.9465, 122.7717]
 _C.INPUT.PIXEL_STD = [1., 1., 1.]
 # Convert image to BGR format (for Caffe2 models), in range 0-255
 _C.INPUT.TO_BGR255 = True
-
+# Use only bottom half of the image
+_C.INPUT.BOTTOM_HALF = False
 
 # -----------------------------------------------------------------------------
 # Dataset
@@ -233,6 +234,10 @@ _C.MODEL.ROI_CAR_CLS_ROT_HEAD.QUATERNION_HEMISPHERE = False
 # Rotation name
 _C.MODEL.ROI_CAR_CLS_ROT_HEAD.ROT_NAME = "quaternions"
 _C.MODEL.ROI_CAR_CLS_ROT_HEAD.SUBCLASS_NAME = "car_cat_classes"
+# Loss coefficient:
+_C.MODEL.ROI_CAR_CLS_ROT_HEAD.SUBCAT_LOSS_BETA = 1.0
+_C.MODEL.ROI_CAR_CLS_ROT_HEAD.ROT_LOSS_BETA = 1.0
+
 
 _C.MODEL.TRANS_HEAD = CN()
 _C.MODEL.TRANS_HEAD.FEATURE_EXTRACTOR = "MLPFeatureExtractor"
