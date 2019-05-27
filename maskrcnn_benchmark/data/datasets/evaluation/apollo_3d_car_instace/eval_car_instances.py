@@ -59,7 +59,8 @@ def do_3d_car_instance_evaluation(
     # We First evaluate the box, segm and then evaluate the 3D metric
     # First boxes
     eval_type = 'boxes'
-    gt_file = os.path.join(output_folder, 'val_gt_' + eval_type + '.pth')
+    gt_dir = '/'.join(output_folder.split('/')[:-3])
+    gt_file = os.path.join(gt_dir, 'val_gt_' + eval_type + '.pth')
     # Since reading GT need to retrieve from the hard disc, so we try to cache it.
     if os.path.isfile(gt_file):
         coco_gt = pickle.load(open(gt_file, "rb"))
@@ -98,7 +99,7 @@ def do_3d_car_instance_evaluation(
 
     # Now we evaluate the segm
     eval_type = 'segms'
-    gt_file = os.path.join(output_folder, 'val_gt_' + eval_type + '.pth')
+    gt_file = os.path.join(gt_dir, 'val_gt_' + eval_type + '.pth')
     # Since reading GT need to retrieve from the hard disc, so we try to cache it.
     if os.path.isfile(gt_file):
         coco_gt = pickle.load(open(gt_file, "rb"))
