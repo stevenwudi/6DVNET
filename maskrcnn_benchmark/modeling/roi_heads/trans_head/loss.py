@@ -32,6 +32,7 @@ def huber_loss(bbox_pred, bbox_targets, device_id, beta=2.8):
     loss_box = in_box_loss + out_box_loss
     N = loss_box.size(0)  # batch size
     loss_box = loss_box.view(-1).sum(0) / N
+
     return loss_box
 
 
@@ -110,7 +111,9 @@ class TransLoss(object):
             beta = self.cfg.MODEL.TRANS_HEAD.TRANS_HUBER_THRESHOLD
             loss_trans = huber_loss(trans_pred, label_trans[positive_inds], device_id, beta)
 
-        return loss_trans
+        dis_trans = torch.mean(torch.norm((trans_pred - label_trans[positive_inds]), dim=1)).detach()
+
+        return loss_trans, dis_trans
 
 
 def make_roi_trans_evaluator(cfg):
