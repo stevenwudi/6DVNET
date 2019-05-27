@@ -133,22 +133,23 @@ class Car3D(torch.utils.data.Dataset):
             area = (0, int(image_shape[1]/2), image_shape[0], int(image_shape[1]))
             img = img.crop(area)
 
-        if self.list_flag in ['train', 'val']:
-            target = self._add_gt_annotations_Car3d(idx, image_shape)
-
         # We also change the size of image very iteration:
         if self.training:
             resize_size = np.random.randint(self.cfg['INPUT']['MIN_SIZE_TRAIN_RANGE'][0], self.cfg['INPUT']['MIN_SIZE_TRAIN_RANGE'][1])
             self.transforms.transforms[0].min_size = resize_size
+            im_scale = float(resize_size) / float(min(img.size))
         else:
             self.transforms.transforms[0].min_size = self.cfg['INPUT']['MIN_SIZE_TEST']
+
+        if self.list_flag in ['train', 'val']:
+            target = self._add_gt_annotations_Car3d(idx, image_shape, im_scale)
 
         if self.transforms is not None:
             img, target = self.transforms(img, target)
 
         return img, target, idx
 
-    def _add_gt_annotations_Car3d(self, idx, image_shape):
+    def _add_gt_annotations_Car3d(self, idx, image_shape, im_scale):
         """Add ground truth annotation metadata to an roidb entry."""
         # initiate the lists
         masks = []
@@ -234,6 +235,10 @@ class Car3D(torch.utils.data.Dataset):
         labels = np.ones(car_cat_classes.shape)
         labels = torch.tensor(labels)
         target.add_field("labels", labels)
+
+        im_scales = im_scale * np.ones(car_cat_classes.shape)
+        im_scales = torch.tensor(im_scales)
+        target.add_field("im_scales", im_scales)
 
         target = target.clip_to_image(remove_empty=True)
         # for evaluation purpose
