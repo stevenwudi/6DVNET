@@ -74,19 +74,20 @@ def do_train(
 
         loss_dict = model(images, targets)
 
-        losses = sum(loss for loss in loss_dict.values())
+        # we only sum up the loss but no other metrics
+        losses = sum([v for (k, v) in loss_dict.items() if k.split('/')[-1][:4] == 'loss'])
+        optimizer.zero_grad()
+        losses.backward()
+        optimizer.step()
 
         # reduce losses over all GPUs for logging purposes
         loss_dict_reduced = reduce_loss_dict(loss_dict)
-        losses_reduced = sum(loss for loss in loss_dict_reduced.values())
+        losses_reduced = sum([v for (k, v) in loss_dict_reduced.items() if k.split('/')[-1][:4]=='loss'])
 
         # Prepend the key name so as to allow better visualisation in tensorboard
         loss_dict_reduced['detector_losses/total_loss'] = losses_reduced
         meters.update(**loss_dict_reduced)
         meters.update(lr=optimizer.param_groups[-1]['lr'])
-        optimizer.zero_grad()
-        losses.backward()
-        optimizer.step()
 
         batch_time = time.time() - end
         end = time.time()
