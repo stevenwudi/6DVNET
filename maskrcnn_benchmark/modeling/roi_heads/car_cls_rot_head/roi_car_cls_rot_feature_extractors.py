@@ -27,15 +27,15 @@ class FPN2MLP2FeatureExtractor(nn.Module):
         for l in [self.fc6, self.fc7]:
             # Caffe2 implementation uses XavierFill, which in fact
             # corresponds to kaiming_uniform_ in PyTorch
-            nn.init.kaiming_uniform_(l.weight, a=1)
+            nn.init.kaiming_uniform_(l.weight)
             nn.init.constant_(l.bias, 0)
 
     def forward(self, x, proposals):
         x = self.pooler(x, proposals)
         x = x.view(x.size(0), -1)
 
-        x = F.relu(self.fc6(x))
-        x = F.relu(self.fc7(x))
+        x = F.relu(self.fc6(x), inplace=True)
+        x = F.relu(self.fc7(x), inplace=True)
 
         return x
 

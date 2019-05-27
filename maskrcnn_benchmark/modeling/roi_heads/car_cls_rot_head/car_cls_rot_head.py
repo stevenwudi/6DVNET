@@ -1,4 +1,5 @@
 import torch
+import numpy as np
 from .roi_car_cls_rot_feature_extractors import make_roi_car_cls_rot_feature_extractor
 from .roi_car_cls_rot_predictor import make_roi_car_cls_rot_predictor
 from .loss import make_roi_car_cls_rot_evaluator
@@ -41,13 +42,19 @@ class ROICarClsRotHead(torch.nn.Module):
 
         loss_type = self.cfg.MODEL.ROI_CAR_CLS_ROT_HEAD.ROT_LOSS
         ce_weight = self.cfg.MODEL.ROI_CAR_CLS_ROT_HEAD.CE_CAR_CLS_FINETUNE_WIGHT
-        loss_cls, loss_rot, accuracy_cls = self.loss_evaluator(proposals, cls_score, rot_pred, targets, loss_type, ce_weight)
+
+        if self.cfg.MODEL.ROI_CAR_CLS_ROT_HEAD.ROT_DIFF_DEGREE:
+            loss_cls, loss_rot, accuracy_cls, rot_diff_degree, shape_sim = self.loss_evaluator(proposals, cls_score, rot_pred, targets, loss_type, ce_weight)
+        else:
+            loss_cls, loss_rot, accuracy_cls = self.loss_evaluator(proposals, cls_score, rot_pred, targets, loss_type, ce_weight)
 
         loss_cls *= self.cfg.MODEL.ROI_CAR_CLS_ROT_HEAD.SUBCAT_LOSS_BETA
-
         loss_rot *= self.cfg.MODEL.ROI_CAR_CLS_ROT_HEAD.ROT_LOSS_BETA
 
-        return x, all_proposals, dict(loss_car_cls=loss_cls, loss_rot=loss_rot, accuracy_car_cls=accuracy_cls)
+        if self.cfg.MODEL.ROI_CAR_CLS_ROT_HEAD.ROT_DIFF_DEGREE:
+            return x, all_proposals, dict(loss_car_cls=loss_cls, loss_rot=loss_rot, accuracy_car_cls=accuracy_cls, rot_diff_degree=rot_diff_degree, shape_sim=shape_sim)
+        else:
+            return x, all_proposals, dict(loss_car_cls=loss_cls, loss_rot=loss_rot, accuracy_car_cls=accuracy_cls)
 
 
 def build_roi_car_cls_rot_head(cfg):

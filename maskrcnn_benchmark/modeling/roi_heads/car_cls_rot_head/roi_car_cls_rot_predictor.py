@@ -14,7 +14,9 @@ class FPNPredictor(nn.Module):
         self.rot_pred = nn.Linear(representation_size, num_rot)
 
         nn.init.normal_(self.cls_score.weight, std=0.01)
+        nn.init.constant_(self.cls_score.bias, 0)
         nn.init.normal_(self.rot_pred.weight, std=0.001)
+        nn.init.constant_(self.rot_pred.bias, 0)
         for l in [self.cls_score, self.rot_pred]:
             nn.init.constant_(l.bias, 0)
 

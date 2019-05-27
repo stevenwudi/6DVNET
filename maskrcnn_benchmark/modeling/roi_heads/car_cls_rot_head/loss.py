@@ -15,6 +15,9 @@ class CarClsRotLoss(object):
         """
         self.proposal_matcher = proposal_matcher
         self.cfg = cfg.clone()
+        if self.cfg.MODEL.ROI_CAR_CLS_ROT_HEAD.ROT_DIFF_DEGREE:
+            # a similarity matrix specific to ApolloScape 3D car
+            self.shape_sim_mat = np.loadtxt('../maskrcnn_benchmark/data/datasets/evaluation/apollo_3d_car_instace/sim_mat.txt')
 
     def match_targets_to_proposals(self, proposal, target):
         match_quality_matrix = boxlist_iou(target, proposal)
@@ -111,7 +114,42 @@ class CarClsRotLoss(object):
             degree = self.cfg.MODEL.ROI_CAR_CLS_ROT_HEAD.ROT_HUBER_THRESHOLD
             loss_rot = huber_loss_rot(rot_pred, quaternions, device_id, degree)
 
-        return loss_cls, loss_rot, accuracy_cls
+        if self.cfg.MODEL.ROI_CAR_CLS_ROT_HEAD.ROT_DIFF_DEGREE:
+            rot_diff_degree = rot_sim_cal(rot_pred.data.cpu().numpy(), quaternions.data.cpu().numpy())
+            rot_diff_degree = torch.tensor(rot_diff_degree).type_as(rot_pred).detach()
+
+            # car shape similarity
+            shape_sim = shape_sim_cal(cls_preds.data.cpu().numpy(), car_cat_classes.data.cpu().numpy(), self.shape_sim_mat, self.cfg.MODEL.ROI_CAR_CLS_ROT_HEAD.UNIQUE_CAR_MODELS)
+            shape_sim = torch.tensor(shape_sim).type_as(rot_pred).detach()
+
+            return loss_cls, loss_rot, accuracy_cls, rot_diff_degree, shape_sim
+        else:
+            return loss_cls, loss_rot, accuracy_cls
+
+
+def rot_sim_cal(dt_car_rot, gt_car_rot):
+    q1 = dt_car_rot / np.linalg.norm(dt_car_rot, axis=1)[:, None]
+    q2 = gt_car_rot / np.linalg.norm(gt_car_rot, axis=1)[:, None]
+    diff = abs(np.sum(q1*q2, axis=1))
+    dis_rot = 2 * np.arccos(diff) * 180 / np.pi
+    dis_rot = dis_rot.mean()
+
+    return dis_rot
+
+
+def shape_sim_cal(pred_car, car_cls_labels_int32, shape_sim_mat, unique_car_models):
+    """
+
+    :param car_cls_prop: N * N_car_classes (34 or 79)
+    :param shape_sim_mat: N * N_car_classes (34 or 79)
+    :return:
+    """
+
+    unique_car_models = np.array(unique_car_models)
+    shape_sim_mat_34 = shape_sim_mat[unique_car_models, :][:, unique_car_models]
+    shape_sim = shape_sim_mat_34[pred_car, car_cls_labels_int32]
+
+    return shape_sim.mean()
 
 
 def huber_loss_rot(trans_pred, label_trans, device_id, degree=5):
