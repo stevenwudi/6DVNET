@@ -31,7 +31,11 @@ class ROITransHead(torch.nn.Module):
         concat_boxes = cat([b.bbox for b in proposals], dim=0)
 
         # get the img scale
-        im_scale = targets[0].get_field('im_scales')[0]
+        if self.training:
+            im_scale = targets[0].get_field('im_scales')[0]
+        else:
+            # For now we have only image scale = 1.0 for test
+            im_scale = 1.0
         box_features = self.bbox_transform_by_intrinsics(concat_boxes, im_scale, device)
 
         x_mlp = self.feature_extractor(box_features)

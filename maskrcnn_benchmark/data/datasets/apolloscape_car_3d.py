@@ -140,6 +140,7 @@ class Car3D(torch.utils.data.Dataset):
             im_scale = float(resize_size) / float(min(img.size))
         else:
             self.transforms.transforms[0].min_size = self.cfg['INPUT']['MIN_SIZE_TEST']
+            im_scale = 1.0
 
         if self.list_flag in ['train', 'val']:
             target = self._add_gt_annotations_Car3d(idx, image_shape, im_scale)
