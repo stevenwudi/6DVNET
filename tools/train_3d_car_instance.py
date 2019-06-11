@@ -88,7 +88,8 @@ def train(cfg, local_rank, distributed, use_tensorboard=False, logger=None):
 
     save_to_disk = get_rank() == 0
     checkpointer = DetectronCheckpointer(cfg, model, optimizer, scheduler, output_dir, save_to_disk, logger=logger)
-    extra_checkpoint_data = checkpointer.load(cfg.MODEL.WEIGHT)
+    print(cfg.TRAIN.IGNORE_LIST)
+    extra_checkpoint_data = checkpointer.load(cfg.MODEL.WEIGHT, ignore_list=cfg.TRAIN.IGNORE_LIST)
     arguments.update(extra_checkpoint_data)
 
     if cfg.SOLVER.KEEP_LR:

@@ -68,13 +68,29 @@ def strip_prefix_if_present(state_dict, prefix):
     return stripped_state_dict
 
 
-def load_state_dict(model, loaded_state_dict):
+def load_state_dict(model, loaded_state_dict, ignore_list=[]):
     model_state_dict = model.state_dict()
+    # If we load the pre-trained weight from MSCOCO
+    state_dict = {}
+    for name in loaded_state_dict:
+        if len(ignore_list):
+            ignore_flag = False
+            for ignore_head in ignore_list:
+                if ignore_head in name:
+                    ignore_flag = True
+                    print('We ignore loading: %s' % name)
+                    break
+            if not ignore_flag:
+                state_dict[name] = loaded_state_dict[name]
+        # There is no ignore list:
+        else:
+            state_dict[name] = loaded_state_dict[name]
+
     # if the state_dict comes from a model that was wrapped in a
     # DataParallel or DistributedDataParallel during serialization,
     # remove the "module" prefix before performing the matching
-    loaded_state_dict = strip_prefix_if_present(loaded_state_dict, prefix="module.")
-    align_and_update_state_dicts(model_state_dict, loaded_state_dict)
+    state_dict = strip_prefix_if_present(state_dict, prefix="module.")
+    align_and_update_state_dicts(model_state_dict, state_dict)
 
     # use strict loading
-    model.load_state_dict(model_state_dict)
+    model.load_state_dict(model_state_dict, strict=False)

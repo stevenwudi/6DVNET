@@ -324,6 +324,7 @@ _C.SOLVER.UNFREEZE_CONV_BODY = False  # When load a model, the first layer is fr
 # ---------------------------------------------------------------------------- #
 _C.TRAIN = CN()
 _C.TRAIN.GT_MIN_AREA = 49  # 7*7
+_C.TRAIN.IGNORE_LIST = []  # Train model loading ignore list
 
 # ---------------------------------------------------------------------------- #
 # Specific test options
