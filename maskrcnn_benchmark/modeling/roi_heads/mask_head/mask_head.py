@@ -1,7 +1,5 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved.
 import torch
-from torch import nn
-
 from maskrcnn_benchmark.structures.bounding_box import BoxList
 
 from .roi_mask_feature_extractors import make_roi_mask_feature_extractor
@@ -23,7 +21,6 @@ def keep_only_positive_boxes(boxes):
     assert boxes[0].has_field("labels")
     positive_boxes = []
     positive_inds = []
-    num_boxes = 0
     for boxes_per_image in boxes:
         labels = boxes_per_image.get_field("labels")
         inds_mask = labels > 0
@@ -63,10 +60,9 @@ class ROIMaskHead(torch.nn.Module):
             all_proposals = proposals
             proposals, positive_inds = keep_only_positive_boxes(proposals)
         if self.training and self.cfg.MODEL.ROI_MASK_HEAD.SHARE_BOX_FEATURE_EXTRACTOR:
-            x = features
-            x = x[torch.cat(positive_inds, dim=0)]
-        else:
-            x = self.feature_extractor(features, proposals)
+            features = features[torch.cat(positive_inds, dim=0)]
+
+        x = self.feature_extractor(features, proposals, self.training)
         mask_logits = self.predictor(x)
 
         if not self.training:

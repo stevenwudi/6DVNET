@@ -72,11 +72,10 @@ def do_train(
         images = images.to(device)
         targets = [target.to(device) for target in targets]
 
+        optimizer.zero_grad()
         loss_dict = model(images, targets)
-
         # we only sum up the loss but no other metrics
         losses = sum([v for (k, v) in loss_dict.items() if k.split('/')[-1][:4] == 'loss'])
-        optimizer.zero_grad()
         losses.backward()
         optimizer.step()
 

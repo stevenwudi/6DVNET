@@ -313,6 +313,11 @@ _C.SOLVER.SNAPSHOT_ITERS = 20
 # see 2 images per batch
 _C.SOLVER.IMS_PER_BATCH = 16
 
+_C.SOLVER.KEEP_LR = False  # When load a model, make the LR from config. file instead
+
+_C.SOLVER.KEEP_LR = False  # When load a model, make the LR from config. file instead
+
+_C.SOLVER.UNFREEZE_CONV_BODY = False  # When load a model, the first layer is freezed.
 
 # ---------------------------------------------------------------------------- #
 # Specific Train options

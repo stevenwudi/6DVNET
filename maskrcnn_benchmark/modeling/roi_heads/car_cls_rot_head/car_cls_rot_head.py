@@ -29,10 +29,8 @@ class ROICarClsRotHead(torch.nn.Module):
             all_proposals = proposals
             proposals, positive_inds = keep_only_positive_boxes(proposals)
         if self.training and self.cfg.MODEL.ROI_CAR_CLS_ROT_HEAD.SHARE_BOX_FEATURE_EXTRACTOR:
-            x = features
-            x = x[torch.cat(positive_inds, dim=0)]
-        else:
-            x = self.feature_extractor(features, proposals)
+            features = features[torch.cat(positive_inds, dim=0)]
+        x = self.feature_extractor(features, proposals, self.training)
 
         cls_score, cls, rot_pred = self.predictor(x)
 

@@ -20,7 +20,7 @@ class MaskRCNNFPNFeatureExtractor(nn.Module):
             representation_size (int): size of the intermediate representation
         """
         super(MaskRCNNFPNFeatureExtractor, self).__init__()
-
+        self.cfg = cfg.clone()
         resolution = cfg.MODEL.ROI_MASK_HEAD.POOLER_RESOLUTION
         scales = cfg.MODEL.ROI_MASK_HEAD.POOLER_SCALES
         sampling_ratio = cfg.MODEL.ROI_MASK_HEAD.POOLER_SAMPLING_RATIO
@@ -47,8 +47,10 @@ class MaskRCNNFPNFeatureExtractor(nn.Module):
             next_feature = layer_features
             self.blocks.append(layer_name)
 
-    def forward(self, x, proposals):
-        x = self.pooler(x, proposals)
+    def forward(self, x, proposals, train=True):
+        # Even we share the feature extraction, during test, we always pool according to the proposal
+        if not train or not self.cfg.MODEL.ROI_MASK_HEAD.SHARE_BOX_FEATURE_EXTRACTOR:
+            x = self.pooler(x, proposals)
 
         for layer_name in self.blocks:
             x = F.relu(getattr(self, layer_name)(x))

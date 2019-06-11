@@ -49,7 +49,7 @@ class FPN2MLPFeatureExtractor(nn.Module):
 
     def __init__(self, cfg):
         super(FPN2MLPFeatureExtractor, self).__init__()
-
+        self.cfg = cfg.clone()
         resolution = cfg.MODEL.ROI_BOX_HEAD.POOLER_RESOLUTION
         scales = cfg.MODEL.ROI_BOX_HEAD.POOLER_SCALES
         sampling_ratio = cfg.MODEL.ROI_BOX_HEAD.POOLER_SAMPLING_RATIO
@@ -71,13 +71,14 @@ class FPN2MLPFeatureExtractor(nn.Module):
             nn.init.constant_(l.bias, 0)
 
     def forward(self, x, proposals):
-        x = self.pooler(x, proposals)
-        x = x.view(x.size(0), -1)
-
+        x_roi = self.pooler(x, proposals)
+        x = x_roi.view(x_roi.size(0), -1)
         x = F.relu(self.fc6(x))
         x = F.relu(self.fc7(x))
-
-        return x
+        if self.cfg.MODEL.ROI_MASK_HEAD.SHARE_BOX_FEATURE_EXTRACTOR:
+            return x_roi, x
+        else:
+            return x
 
 
 def make_roi_box_feature_extractor(cfg):

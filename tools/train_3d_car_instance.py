@@ -13,6 +13,7 @@ import os
 import matplotlib
 matplotlib.use("TkAgg")
 os.environ['CUDA_VISIBLE_DEVICES'] = '1, 2, 3'
+#os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
 import torch
 from maskrcnn_benchmark.config import cfg
@@ -69,6 +70,10 @@ def train(cfg, local_rank, distributed, use_tensorboard=False, logger=None):
     device = torch.device(cfg.MODEL.DEVICE)
     model.to(device)
 
+    if cfg.SOLVER.UNFREEZE_CONV_BODY:
+        for p in model.backbone.parameters():
+            p.requires_grad = True
+
     optimizer = make_optimizer(cfg, model)
     scheduler = make_lr_scheduler(cfg, optimizer)
 
@@ -85,6 +90,10 @@ def train(cfg, local_rank, distributed, use_tensorboard=False, logger=None):
     checkpointer = DetectronCheckpointer(cfg, model, optimizer, scheduler, output_dir, save_to_disk, logger=logger)
     extra_checkpoint_data = checkpointer.load(cfg.MODEL.WEIGHT)
     arguments.update(extra_checkpoint_data)
+
+    if cfg.SOLVER.KEEP_LR:
+        optimizer = make_optimizer(cfg, model)
+        scheduler = make_lr_scheduler(cfg, optimizer)
 
     checkpoint_period = cfg.SOLVER.CHECKPOINT_PERIOD
     tensorboard_logdir = cfg.OUTPUT_DIR

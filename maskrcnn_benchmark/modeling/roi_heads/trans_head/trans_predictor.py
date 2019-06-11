@@ -12,6 +12,8 @@ class MLPCONCATPredictor(nn.Module):
 
         self.car_cls_rot_linear = nn.Linear(representation_size, cfg.MODEL.TRANS_HEAD.MLP_HEAD_DIM)
         self.trans_pred = nn.Linear(box_representation_classes + cfg.MODEL.TRANS_HEAD.MLP_HEAD_DIM, cfg.MODEL.TRANS_HEAD.OUTPUT_DIM)
+        self.car_cls_rot_linear_bn = nn.BatchNorm1d(cfg.MODEL.TRANS_HEAD.MLP_HEAD_DIM)
+        nn.init.constant_(self.car_cls_rot_linear_bn.weight, 1.0)
 
         nn.init.normal_(self.car_cls_rot_linear.weight, std=0.01)
         nn.init.normal_(self.trans_pred.weight, std=0.1)
@@ -24,8 +26,9 @@ class MLPCONCATPredictor(nn.Module):
 
         batch_size = x_mlp.size(0)
 
-        x_car_cls_rot = F.relu(self.car_cls_rot_linear(x_car_cls_rot.view(batch_size, -1)), inplace=True)
+        x_car_cls_rot = F.relu(self.car_cls_rot_linear_bn(self.car_cls_rot_linear(x_car_cls_rot.view(batch_size, -1))), inplace=True)
         x_merge = F.relu(torch.cat((x_mlp, x_car_cls_rot), dim=1))
+
         trans_pred = self.trans_pred(x_merge)
         return trans_pred
 
